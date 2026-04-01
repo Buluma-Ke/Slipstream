@@ -11,7 +11,6 @@ def get_connection():
     return duckdb.connect(str(DB_PATH))
 
 
-
 def init_db():
     """
     Create the core tables if they don't exist.
@@ -24,19 +23,20 @@ def init_db():
     con = get_connection()
     con.execute("""
         CREATE TABLE IF NOT EXISTS laps (
-            year         INTEGER,
-            event_name   VARCHAR,
-            session_type VARCHAR,
-            driver       VARCHAR,
-            team         VARCHAR,
-            lap_number   INTEGER,
-            lap_time_sec DOUBLE,
-            s1_sec       DOUBLE,
-            s2_sec       DOUBLE,
-            s3_sec       DOUBLE,
-            compound     VARCHAR,
-            tyre_life    INTEGER,
-            is_personal_best BOOLEAN
+            year             INTEGER,
+            event_name       VARCHAR,
+            session_type     VARCHAR,
+            driver           VARCHAR,
+            team             VARCHAR,
+            lap_number       INTEGER,
+            lap_time_sec     DOUBLE,
+            s1_sec           DOUBLE,
+            s2_sec           DOUBLE,
+            s3_sec           DOUBLE,
+            compound         VARCHAR,
+            tyre_life        INTEGER,
+            is_personal_best BOOLEAN,
+            UNIQUE (year, event_name, session_type, driver, lap_number)
         )
     """)
     con.execute("""
@@ -149,23 +149,28 @@ def query_laps(year=None, event_name=None, session_type=None, driver=None):
 
 
 if __name__ == "__main__":
-    init_db()
+    con = get_connection()
 
-    # Load session from FastF1
-    import sys
-    sys.path.insert(0, '.')
-    from data.loader import get_session, get_laps
+    print("\n--- Sessions stored ---")
+    print(con.execute("SELECT * FROM sessions_loaded").df())
 
-    print("\nLoading session from FastF1...")
-    session = get_session(2023, 'Bahrain', 'R')
-    laps = get_laps(session)
+    print("\n--- Total laps ---")
+    print(con.execute("SELECT COUNT(*) as total_laps FROM laps").df())
 
-    # Save to DuckDB
-    print("\nSaving to DuckDB...")
-    save_laps(laps, 2023, 'Bahrain Grand Prix', 'R')
+    print("\n--- Avg pace per driver ---")
+    print(con.execute("""
+        SELECT driver, COUNT(*) as laps, ROUND(AVG(lap_time_sec), 3) as avg_lap
+        FROM laps
+        GROUP BY driver
+        ORDER BY avg_lap
+    """).df().to_string())
 
-    # Read back from DuckDB
-    print("\nQuerying from DuckDB...")
-    stored = query_laps(year=2023, event_name='Bahrain Grand Prix', session_type='R')
-    print(f"Rows returned: {len(stored)}")
-    print(stored[['driver', 'lap_number', 'lap_time_sec', 'compound']].head(10))
+    print("\n--- Compound breakdown ---")
+    print(con.execute("""
+        SELECT compound, COUNT(*) as laps, ROUND(AVG(lap_time_sec), 3) as avg_lap
+        FROM laps
+        GROUP BY compound
+        ORDER BY avg_lap
+    """).df().to_string())
+
+    con.close()
