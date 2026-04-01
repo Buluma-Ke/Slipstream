@@ -1,6 +1,9 @@
 import sys
 sys.path.insert(0, '.')
 
+import plotly.express as px
+from plotly.subplots import make_subplots
+import plotly.graph_objects as go
 from data.loader import get_session
 
 
@@ -61,3 +64,48 @@ telemetry = ver_lap.get_car_data().add_distance()
 print(f"Rows: {len(telemetry)}")
 print(f"Columns: {telemetry.columns.tolist()}")
 print(telemetry[['Distance', 'Speed', 'Throttle', 'Brake', 'nGear']].head(10))
+
+
+
+# --- 8. Plot speed trace with throttle and brake ---
+fig = make_subplots(
+    rows=3, cols=1,
+    shared_xaxes=True,
+    subplot_titles=['Speed (km/h)', 'Throttle (%)', 'Brake'],
+    vertical_spacing=0.08
+)
+
+fig.add_trace(go.Scatter(x=telemetry['Distance'], y=telemetry['Speed'], name='Speed', line=dict(color='#E8002D')), row=1, col=1)
+fig.add_trace(go.Scatter(x=telemetry['Distance'], y=telemetry['Throttle'], name='Throttle', line=dict(color='#27F4D2')), row=2, col=1)
+fig.add_trace(go.Scatter(x=telemetry['Distance'], y=telemetry['Brake'].astype(int), name='Brake', fill='tozeroy', line=dict(color='#FF8000')), row=3, col=1)
+
+fig.update_layout(title='VER Lap 10 — Telemetry (Bahrain 2023)', showlegend=False, height=600)
+fig.update_xaxes(title_text='Distance (m)', row=3, col=1)
+
+fig.show()
+
+
+
+# --- 9. Track map coloured by speed ---
+pos = ver_lap.get_pos_data()
+tel = ver_lap.get_car_data().add_distance()
+
+# Merge position and telemetry on time
+from fastf1 import plotting
+merged = tel.merge_channels(pos)
+
+fig = px.scatter(
+    merged,
+    x='X',
+    y='Y',
+    color='Speed',
+    color_continuous_scale='RdYlGn',
+    title='VER Lap 10 — Speed map (Bahrain 2023)',
+    labels={'Speed': 'Speed (km/h)'}
+)
+fig.update_traces(marker=dict(size=4))
+fig.update_layout(
+    xaxis=dict(visible=False),
+    yaxis=dict(visible=False, scaleanchor='x')
+)
+fig.show()
