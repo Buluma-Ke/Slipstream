@@ -11,3 +11,25 @@ def get_session(year, event, session_type="R"):
     session = fastf1.get_session(year, event, session_type)
     session.load()
     return session
+
+
+def get_laps(session):
+    """
+    Return cleaned lap data from a session.
+    Converts timedelta columns to seconds and removes laps with no recorded time.
+
+    Args:
+        session: A loaded FastF1 session object
+
+    Returns:
+        pandas DataFrame of cleaned laps
+    """
+    laps = session.laps.copy()
+
+    # Drop laps with no recorded time
+    laps = laps.dropna(subset=['LapTime'])
+
+    # Convert LapTime to seconds
+    laps['LapTimeSec'] = laps['LapTime'].dt.total_seconds()
+
+    return laps
