@@ -20,7 +20,7 @@ pip install -r requirements.txt
 
 - [x] Phase 1 — Environment & first data
 - [x] Phase 2 — Persistent storage (DuckDB)
-- [ ] Phase 3 — Plotly charts
+- [x] Phase 3 — Plotly charts
 - [ ] Phase 4 — Dash app
 - [ ] Phase 5 — ML: tyre degradation
 - [ ] Phase 6 — Polish & deploy
