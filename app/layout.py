@@ -54,7 +54,7 @@ def build_layout():
                     ], md=3),
                 ]),
                 dbc.Row(dbc.Col(
-                    html.Div(id='selection-display', className='text-muted small mt-2'),
+                    html.Div(id='selection-display', className='text-warning small mt-2 fw-bold'),
                 )),
                 dbc.Row(dbc.Col(
                     dbc.Button('Load session', id='btn-load', color='danger', className='mt-3'),
