@@ -1,5 +1,5 @@
 import pandas as pd
-from dash import Input, Output, State, callback, no_update
+from dash import Input, Output, State, callback, no_update, html
 from data.loader import get_session, get_laps
 from data.store import save_laps, query_laps
 import fastf1
@@ -57,7 +57,12 @@ def load_session(n_clicks, year, event, session_type):
 )
 def update_stats(laps_json):
     if not laps_json:
-        return '—', '—', '—', '—'
+        return (
+            [html.Div('Fastest Lap', className='label'), html.Div('—', className='value')],
+            [html.Div('Total Laps', className='label'), html.Div('—', className='value')],
+            [html.Div('Drivers', className='label'), html.Div('—', className='value')],
+            [html.Div('Fastest Team', className='label'), html.Div('—', className='value')],
+        )
     from io import StringIO
     laps = pd.read_json(StringIO(laps_json), orient='split')
     fastest_idx = laps['laptimesec'].idxmin()
@@ -67,10 +72,14 @@ def update_stats(laps_json):
     drivers = laps['driver'].nunique()
     fastest_team = laps.loc[fastest_idx, 'team']
     return (
-        f"{fastest_driver} — {fastest_time:.3f}s",
-        str(total_laps),
-        str(drivers),
-        fastest_team,
+        [html.Div('Fastest Lap', className='label'),
+         html.Div(f'{fastest_driver} — {fastest_time:.3f}s', className='value')],
+        [html.Div('Total Laps', className='label'),
+         html.Div(str(total_laps), className='value')],
+        [html.Div('Drivers', className='label'),
+         html.Div(str(drivers), className='value')],
+        [html.Div('Fastest Team', className='label'),
+         html.Div(fastest_team, className='value')],
     )
 
 
@@ -292,3 +301,51 @@ def update_map(driver, lap_number, year, event, session_type):
     except Exception as e:
         print(f'Map error: {e}')
         return {}
+    
+
+# --- Sidebar toggle ---
+@callback(
+    Output('sidebar', 'className'),
+    Output('main-content', 'className'),
+    Output('sidebar-toggle-icon', 'children'),
+    Input('sidebar-toggle', 'n_clicks'),
+    State('sidebar', 'className'),
+    prevent_initial_call=True,
+)
+def toggle_sidebar(n_clicks, current_class):
+    if 'collapsed' in current_class:
+        return 'sidebar expanded', 'main-content', '◀'
+    return 'sidebar collapsed', 'main-content expanded', '▶'
+
+
+# --- Page routing ---
+@callback(
+    Output('page-content', 'children'),
+    Output('store-page', 'data'),
+    [Input(f'nav-{page_id}', 'n_clicks')
+     for page_id, _, _ in [
+         ('home', '', ''), ('schedule', '', ''), ('standings', '', ''),
+         ('races', '', ''), ('drivers', '', ''), ('teams', '', ''),
+         ('telemetry', '', ''), ('predictions', '', ''),
+     ]],
+    prevent_initial_call=True,
+)
+def route_page(*args):
+    from dash import ctx
+    from app.pages import home, races, schedule, standings, drivers, teams, telemetry, predictions
+
+    page_map = {
+        'nav-home':        (home.layout(),        'home'),
+        'nav-schedule':    (schedule.layout(),    'schedule'),
+        'nav-standings':   (standings.layout(),   'standings'),
+        'nav-races':       (races.layout(),       'races'),
+        'nav-drivers':     (drivers.layout(),     'drivers'),
+        'nav-teams':       (teams.layout(),       'teams'),
+        'nav-telemetry':   (telemetry.layout(),   'telemetry'),
+        'nav-predictions': (predictions.layout(), 'predictions'),
+    }
+
+    triggered = ctx.triggered_id
+    if triggered in page_map:
+        return page_map[triggered]
+    return home.layout(), 'home'

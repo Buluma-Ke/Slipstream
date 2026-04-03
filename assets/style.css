@@ -17,115 +17,123 @@ body::before {
     content: '';
     position: fixed;
     inset: 0;
-    background: rgba(0, 0, 0, 0.75);
+    background: rgba(0, 0, 0, 0.88);
     z-index: 0;
 }
 
-#react-entry-point { position: relative; z-index: 1; }
+#react-entry-point { position: relative; z-index: 1; height: 100vh; }
 
-/* ── Navbar ── */
-.navbar {
-    background: transparent !important;
-    border-bottom: 1px solid #E8002D !important;
-    padding: 4px 16px !important;
+/* ── Top bar ── */
+.top-bar {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 5px 16px;
+    border-bottom: 2px solid #E8002D;
+    background: rgba(0,0,0,0.6);
 }
 
-.navbar-brand {
-    font-family: 'Barlow Condensed', sans-serif !important;
-    font-size: 1.4rem !important;
-    font-weight: 700 !important;
-    color: #ffffff !important;
-    letter-spacing: 0.2em !important;
-    text-transform: uppercase !important;
+.app-title {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 1.5rem;
+    font-weight: 700;
+    letter-spacing: 0.25em;
+    text-transform: uppercase;
+    color: #fff;
 }
 
-.nav-subtitle {
-    color: #E8002D !important;
-    font-size: 0.65rem !important;
-    letter-spacing: 0.25em !important;
-    text-transform: uppercase !important;
+.app-title span {
+    color: #E8002D;
 }
 
-/* ── Selector bar ── */
-.selector-bar {
-    background: rgba(0, 0, 0, 0.6) !important;
-    border: none !important;
-    border-bottom: 1px solid #1a1a1a !important;
-    border-radius: 0 !important;
-    padding: 6px 12px !important;
+/* ── Stat pills in top bar ── */
+.stat-pill {
+    display: flex;
+    flex-direction: column;
+    padding: 2px 12px;
+    border-left: 1px solid #2a2a2a;
 }
 
-/* ── Stat cards ── */
-.stat-card {
-    background: rgba(0, 0, 0, 0.55) !important;
-    border-left: 2px solid #E8002D !important;
-    border-top: none !important;
-    border-right: none !important;
-    border-bottom: none !important;
-    padding: 4px 10px !important;
-}
-
-.stat-label {
-    font-size: 0.55rem;
+.stat-pill .label {
+    font-size: 0.5rem;
     color: #888;
     letter-spacing: 0.2em;
     text-transform: uppercase;
 }
 
-.stat-value {
+.stat-pill .value {
     font-family: 'Barlow Condensed', sans-serif;
-    font-size: 1.1rem;
+    font-size: 1rem;
     font-weight: 600;
-    color: #ffffff;
+    color: #fff;
     letter-spacing: 0.05em;
 }
 
-/* ── Labels ── */
+/* ── Selector row ── */
+.selector-row {
+    display: flex;
+    align-items: flex-end;
+    gap: 8px;
+    padding: 6px 16px;
+    background: rgba(0,0,0,0.5);
+    border-bottom: 1px solid #1a1a1a;
+}
+
 .selector-label {
-    font-size: 0.55rem;
-    color: #888;
+    font-size: 0.5rem;
+    color: #666;
     letter-spacing: 0.2em;
     text-transform: uppercase;
     margin-bottom: 2px;
 }
 
+.selector-col { display: flex; flex-direction: column; }
+.selector-col.year { width: 80px; }
+.selector-col.event { flex: 1; }
+.selector-col.session { width: 140px; }
+.selector-col.btn { width: 80px; }
+.selector-col.status { flex: 1; justify-content: flex-end; }
+
 /* ── Dropdowns ── */
 .Select-control {
-    background: rgba(0,0,0,0.7) !important;
+    background: rgba(0,0,0,0.8) !important;
     border: 1px solid #2a2a2a !important;
     border-radius: 2px !important;
     font-family: 'DM Mono', monospace !important;
-    font-size: 0.75rem !important;
-    min-height: 28px !important;
-    height: 28px !important;
+    font-size: 0.72rem !important;
+    min-height: 26px !important;
+    height: 26px !important;
 }
 
+.Select-input { height: 24px !important; }
+
 .Select-value-label, .Select-placeholder {
-    color: #fff !important;
-    font-size: 0.75rem !important;
-    line-height: 28px !important;
+    color: #ccc !important;
+    font-size: 0.72rem !important;
+    line-height: 24px !important;
 }
 
 .Select-menu-outer {
     background: #0a0a0a !important;
     border: 1px solid #2a2a2a !important;
     border-radius: 2px !important;
-    z-index: 999 !important;
+    z-index: 9999 !important;
 }
 
 .Select-option {
     background: #0a0a0a !important;
-    color: #ccc !important;
-    font-size: 0.75rem !important;
-    padding: 6px 10px !important;
+    color: #aaa !important;
+    font-size: 0.72rem !important;
+    padding: 5px 10px !important;
 }
 
 .Select-option:hover, .Select-option.is-focused {
-    background: #1a1a1a !important;
+    background: #111 !important;
     color: #E8002D !important;
 }
 
-.Select-arrow { border-top-color: #555 !important; }
+.Select-arrow-zone { padding-right: 6px !important; }
+.Select-arrow { border-top-color: #444 !important; }
 
 /* ── Load button ── */
 #btn-load {
@@ -138,52 +146,52 @@ body::before {
     font-weight: 700 !important;
     letter-spacing: 0.2em !important;
     text-transform: uppercase !important;
-    padding: 4px 16px !important;
-    height: 28px !important;
-    line-height: 20px !important;
+    padding: 0 12px !important;
+    height: 26px !important;
+    line-height: 26px !important;
+    width: 100% !important;
 }
 
 #btn-load:hover { background: #ff1a3d !important; }
 
-/* ── Selection + status text ── */
+/* ── Status text ── */
 #selection-display {
-    font-size: 0.65rem;
+    font-size: 0.62rem;
     color: #c9a84c;
-    letter-spacing: 0.1em;
+    letter-spacing: 0.08em;
 }
 
 #session-status {
-    font-size: 0.65rem;
-    color: #666;
+    font-size: 0.62rem;
+    color: #555;
 }
 
-/* ── Alert ── */
 .alert-success {
-    background: rgba(232, 0, 45, 0.08) !important;
-    border: 1px solid #E8002D !important;
-    color: #E8002D !important;
-    font-family: 'DM Mono', monospace !important;
-    font-size: 0.65rem !important;
-    border-radius: 2px !important;
-    padding: 4px 10px !important;
+    background: transparent !important;
+    border: none !important;
+    color: #c9a84c !important;
+    font-size: 0.62rem !important;
+    padding: 0 !important;
+    margin: 0 !important;
 }
 
 /* ── Tabs ── */
 .nav-tabs {
     border-bottom: 1px solid #1a1a1a !important;
-    margin-bottom: 4px !important;
+    padding: 0 16px !important;
+    background: rgba(0,0,0,0.4) !important;
 }
 
 .nav-tabs .nav-link {
     font-family: 'Barlow Condensed', sans-serif !important;
-    font-size: 0.75rem !important;
+    font-size: 0.72rem !important;
     font-weight: 600 !important;
-    letter-spacing: 0.15em !important;
+    letter-spacing: 0.18em !important;
     text-transform: uppercase !important;
-    color: #555 !important;
+    color: #444 !important;
     border: none !important;
     border-bottom: 2px solid transparent !important;
-    padding: 4px 12px !important;
+    padding: 5px 14px !important;
     border-radius: 0 !important;
     background: transparent !important;
 }
@@ -196,11 +204,187 @@ body::before {
 
 .nav-tabs .nav-link:hover { color: #fff !important; }
 
-/* ── Charts — fully transparent ── */
-.js-plotly-plot, .plotly, .plot-container {
+/* ── Tab content ── */
+.tab-content { padding: 0 !important; }
+
+/* ── Charts fully transparent ── */
+.js-plotly-plot, .plotly, .plot-container,
+.js-plotly-plot .plotly .main-svg,
+.js-plotly-plot .plotly .main-svg .bg {
     background: transparent !important;
+    background-color: transparent !important;
 }
 
-.js-plotly-plot .plotly .main-svg {
-    background: transparent !important;
+/* ── Sidebar in tabs ── */
+.tab-sidebar {
+    padding: 8px 12px;
+    border-right: 1px solid #1a1a1a;
+    height: 75vh;
+}
+
+/* ── Sidebar ── */
+.sidebar {
+    position: fixed;
+    left: 0;
+    top: 0;
+    height: 100vh;
+    width: 220px;
+    background: rgba(0, 0, 0, 0.92);
+    border-right: 1px solid #1a1a1a;
+    display: flex;
+    flex-direction: column;
+    transition: width 0.25s ease;
+    z-index: 100;
+    overflow: hidden;
+}
+
+.sidebar.collapsed {
+    width: 52px;
+}
+
+/* ── Logo ── */
+.sidebar-logo {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 14px 14px 10px;
+    border-bottom: 2px solid #E8002D;
+    min-height: 52px;
+    overflow: hidden;
+    white-space: nowrap;
+}
+
+.sidebar-logo-icon {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 1.4rem;
+    font-weight: 700;
+    color: #E8002D;
+    min-width: 24px;
+    text-align: center;
+}
+
+.sidebar-logo-text {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 1.1rem;
+    font-weight: 700;
+    letter-spacing: 0.2em;
+    color: #fff;
+    opacity: 1;
+    transition: opacity 0.2s ease;
+}
+
+.sidebar.collapsed .sidebar-logo-text {
+    opacity: 0;
+    pointer-events: none;
+}
+
+/* ── Nav items ── */
+.sidebar-nav {
+    flex: 1;
+    padding: 8px 0;
+    overflow-y: auto;
+    overflow-x: hidden;
+}
+
+.nav-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 14px;
+    cursor: pointer;
+    white-space: nowrap;
+    border-left: 2px solid transparent;
+    transition: background 0.15s ease, border-color 0.15s ease;
+}
+
+.nav-item:hover {
+    background: rgba(232, 0, 45, 0.08);
+    border-left: 2px solid #E8002D;
+}
+
+.nav-item.active {
+    background: rgba(232, 0, 45, 0.12);
+    border-left: 2px solid #E8002D;
+}
+
+.nav-icon {
+    font-size: 1rem;
+    min-width: 24px;
+    text-align: center;
+    color: #888;
+    transition: color 0.15s ease;
+}
+
+.nav-item:hover .nav-icon,
+.nav-item.active .nav-icon {
+    color: #E8002D;
+}
+
+.nav-label {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 0.85rem;
+    font-weight: 600;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: #888;
+    opacity: 1;
+    transition: opacity 0.2s ease, color 0.15s ease;
+}
+
+.nav-item:hover .nav-label,
+.nav-item.active .nav-label {
+    color: #fff;
+}
+
+.sidebar.collapsed .nav-label {
+    opacity: 0;
+    pointer-events: none;
+}
+
+/* ── Toggle button ── */
+.sidebar-toggle {
+    padding: 12px 14px;
+    cursor: pointer;
+    border-top: 1px solid #1a1a1a;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #555;
+    font-size: 0.7rem;
+    transition: color 0.15s ease;
+}
+
+.sidebar-toggle:hover { color: #E8002D; }
+
+/* ── Main content area ── */
+.main-content {
+    margin-left: 220px;
+    height: 100vh;
+    overflow: hidden;
+    transition: margin-left 0.25s ease;
+    display: flex;
+    flex-direction: column;
+}
+
+.main-content.expanded {
+    margin-left: 52px;
+}
+
+
+/* ── Top bar ── */
+.top-bar {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 5px 16px;
+    border-bottom: 1px solid #1a1a1a;
+    background: rgba(0,0,0,0.6);
+    min-height: 42px;
+}
+
+/* ── Page content ── */
+.page-content {
+    flex: 1;
+    overflow: hidden;
+    padding: 0;
 }
