@@ -1,0 +1,206 @@
+@import url('https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Barlow+Condensed:wght@400;600;700&display=swap');
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+    background-image: url('/assets/bg.jpg');
+    background-size: cover;
+    background-position: center;
+    background-attachment: fixed;
+    height: 100vh;
+    overflow: hidden;
+    font-family: 'DM Mono', monospace;
+    color: #ffffff;
+}
+
+body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.75);
+    z-index: 0;
+}
+
+#react-entry-point { position: relative; z-index: 1; }
+
+/* ── Navbar ── */
+.navbar {
+    background: transparent !important;
+    border-bottom: 1px solid #E8002D !important;
+    padding: 4px 16px !important;
+}
+
+.navbar-brand {
+    font-family: 'Barlow Condensed', sans-serif !important;
+    font-size: 1.4rem !important;
+    font-weight: 700 !important;
+    color: #ffffff !important;
+    letter-spacing: 0.2em !important;
+    text-transform: uppercase !important;
+}
+
+.nav-subtitle {
+    color: #E8002D !important;
+    font-size: 0.65rem !important;
+    letter-spacing: 0.25em !important;
+    text-transform: uppercase !important;
+}
+
+/* ── Selector bar ── */
+.selector-bar {
+    background: rgba(0, 0, 0, 0.6) !important;
+    border: none !important;
+    border-bottom: 1px solid #1a1a1a !important;
+    border-radius: 0 !important;
+    padding: 6px 12px !important;
+}
+
+/* ── Stat cards ── */
+.stat-card {
+    background: rgba(0, 0, 0, 0.55) !important;
+    border-left: 2px solid #E8002D !important;
+    border-top: none !important;
+    border-right: none !important;
+    border-bottom: none !important;
+    padding: 4px 10px !important;
+}
+
+.stat-label {
+    font-size: 0.55rem;
+    color: #888;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+}
+
+.stat-value {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: #ffffff;
+    letter-spacing: 0.05em;
+}
+
+/* ── Labels ── */
+.selector-label {
+    font-size: 0.55rem;
+    color: #888;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    margin-bottom: 2px;
+}
+
+/* ── Dropdowns ── */
+.Select-control {
+    background: rgba(0,0,0,0.7) !important;
+    border: 1px solid #2a2a2a !important;
+    border-radius: 2px !important;
+    font-family: 'DM Mono', monospace !important;
+    font-size: 0.75rem !important;
+    min-height: 28px !important;
+    height: 28px !important;
+}
+
+.Select-value-label, .Select-placeholder {
+    color: #fff !important;
+    font-size: 0.75rem !important;
+    line-height: 28px !important;
+}
+
+.Select-menu-outer {
+    background: #0a0a0a !important;
+    border: 1px solid #2a2a2a !important;
+    border-radius: 2px !important;
+    z-index: 999 !important;
+}
+
+.Select-option {
+    background: #0a0a0a !important;
+    color: #ccc !important;
+    font-size: 0.75rem !important;
+    padding: 6px 10px !important;
+}
+
+.Select-option:hover, .Select-option.is-focused {
+    background: #1a1a1a !important;
+    color: #E8002D !important;
+}
+
+.Select-arrow { border-top-color: #555 !important; }
+
+/* ── Load button ── */
+#btn-load {
+    background: #E8002D !important;
+    border: none !important;
+    border-radius: 2px !important;
+    color: #fff !important;
+    font-family: 'Barlow Condensed', sans-serif !important;
+    font-size: 0.8rem !important;
+    font-weight: 700 !important;
+    letter-spacing: 0.2em !important;
+    text-transform: uppercase !important;
+    padding: 4px 16px !important;
+    height: 28px !important;
+    line-height: 20px !important;
+}
+
+#btn-load:hover { background: #ff1a3d !important; }
+
+/* ── Selection + status text ── */
+#selection-display {
+    font-size: 0.65rem;
+    color: #c9a84c;
+    letter-spacing: 0.1em;
+}
+
+#session-status {
+    font-size: 0.65rem;
+    color: #666;
+}
+
+/* ── Alert ── */
+.alert-success {
+    background: rgba(232, 0, 45, 0.08) !important;
+    border: 1px solid #E8002D !important;
+    color: #E8002D !important;
+    font-family: 'DM Mono', monospace !important;
+    font-size: 0.65rem !important;
+    border-radius: 2px !important;
+    padding: 4px 10px !important;
+}
+
+/* ── Tabs ── */
+.nav-tabs {
+    border-bottom: 1px solid #1a1a1a !important;
+    margin-bottom: 4px !important;
+}
+
+.nav-tabs .nav-link {
+    font-family: 'Barlow Condensed', sans-serif !important;
+    font-size: 0.75rem !important;
+    font-weight: 600 !important;
+    letter-spacing: 0.15em !important;
+    text-transform: uppercase !important;
+    color: #555 !important;
+    border: none !important;
+    border-bottom: 2px solid transparent !important;
+    padding: 4px 12px !important;
+    border-radius: 0 !important;
+    background: transparent !important;
+}
+
+.nav-tabs .nav-link.active {
+    color: #E8002D !important;
+    border-bottom: 2px solid #E8002D !important;
+    background: transparent !important;
+}
+
+.nav-tabs .nav-link:hover { color: #fff !important; }
+
+/* ── Charts — fully transparent ── */
+.js-plotly-plot, .plotly, .plot-container {
+    background: transparent !important;
+}
+
+.js-plotly-plot .plotly .main-svg {
+    background: transparent !important;
+}

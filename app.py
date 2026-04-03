@@ -5,7 +5,7 @@ import app.callbacks
 
 app = dash.Dash(
     __name__,
-    external_stylesheets=[dbc.themes.DARKLY],
+    external_stylesheets=[dbc.themes.BOOTSTRAP],
     title='Slipstream',
     suppress_callback_exceptions=True,
 )

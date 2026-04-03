@@ -3,6 +3,15 @@ import plotly.express as px
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
 
+
+# At the top of charts.py add this helper
+TRANSPARENT_LAYOUT = dict(
+    #plot_bgcolor='rgba(0,0,0,0)',
+    #paper_bgcolor='rgba(0,0,0,0)',
+    #font=dict(color='#ffffff'),
+)
+
+
 # F1 team colours 2024
 TEAM_COLORS = {
     'Red Bull Racing': '#3671C6',
@@ -59,6 +68,7 @@ def make_lap_time_dist(laps):
         title='Lap time distribution',
     )
     fig.update_layout(
+        **TRANSPARENT_LAYOUT,
         showlegend=False,
         plot_bgcolor='rgba(0,0,0,0)',
     )
@@ -104,6 +114,7 @@ def make_speed_trace(telemetry, driver_label=''):
     ), row=4, col=1)
 
     fig.update_layout(
+        **TRANSPARENT_LAYOUT,
         title=f'Telemetry — {driver_label}',
         showlegend=False,
         height=600,
@@ -137,6 +148,7 @@ def make_track_map(telemetry):
     )
     fig.update_traces(marker=dict(size=4))
     fig.update_layout(
+        **TRANSPARENT_LAYOUT,
         plot_bgcolor='rgba(0,0,0,0)',
         xaxis=dict(visible=False),
         yaxis=dict(visible=False, scaleanchor='x'),
@@ -185,6 +197,7 @@ def make_strategy_strip(laps):
         title='Tyre strategy',
     )
     fig.update_layout(
+        **TRANSPARENT_LAYOUT,
         plot_bgcolor='#1a1a1a',
         paper_bgcolor='#1a1a1a',
         font=dict(color='#ffffff'),
@@ -233,6 +246,7 @@ def make_lap_delta(laps, driver_a, driver_b):
     )
     fig.add_hline(y=0, line_dash='dash', line_color='gray')
     fig.update_layout(
+        **TRANSPARENT_LAYOUT,
         plot_bgcolor='#1a1a1a',
         paper_bgcolor='#1a1a1a',
         font=dict(color='#ffffff'),
