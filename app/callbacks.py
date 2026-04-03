@@ -349,3 +349,234 @@ def route_page(*args):
     if triggered in page_map:
         return page_map[triggered]
     return home.layout(), 'home'
+
+
+# ── Home page callbacks ───────────────────────────────────────────────────────
+@callback(
+    Output('home-stat-champion', 'children'),
+    Output('home-stat-constructor', 'children'),
+    Output('home-stat-races', 'children'),
+    Output('home-stat-mostwins', 'children'),
+    Output('home-stat-mostwins-sub', 'children'),
+    Output('home-stat-poles', 'children'),
+    Output('home-stat-poles-sub', 'children'),
+    Output('home-fact-closest', 'children'),
+    Output('home-fact-closest-sub', 'children'),
+    Output('home-fact-topspeed', 'children'),
+    Output('home-fact-topspeed-sub', 'children'),
+    Output('home-fact-dnf', 'children'),
+    Output('home-fact-dnf-sub', 'children'),
+    Output('home-fact-fastlap', 'children'),
+    Output('home-fact-fastlap-sub', 'children'),
+    Output('home-drivers-table', 'children'),
+    Output('home-constructors-table', 'children'),
+    Output('home-loading-status', 'children'),
+    Input('home-dd-year', 'value'),
+)
+def update_home(year):
+    try:
+        schedule = fastf1.get_event_schedule(year, include_testing=False)
+        races = schedule[schedule['EventFormat'] != 'testing']
+        total_races = len(races)
+
+        results_list = []
+        fastest_laps = []
+        top_speeds = []
+
+        for _, event in races.iterrows():
+            try:
+                session = fastf1.get_session(year, event['RoundNumber'], 'R')
+                session.load(telemetry=False, weather=False, messages=False)
+                res = session.results
+                if res is None or len(res) == 0:
+                    continue
+                res = res.copy()
+                res['EventName'] = event['EventName']
+                results_list.append(res)
+
+                # Fastest lap
+                laps = session.laps.pick_fastest()
+                if laps is not None:
+                    fastest_laps.append({
+                        'driver': laps['Driver'],
+                        'time': laps['LapTime'].total_seconds(),
+                        'event': event['EventName'],
+                    })
+
+                # Top speed
+                speed_cols = ['SpeedI1', 'SpeedI2', 'SpeedFL', 'SpeedST']
+                for col in speed_cols:
+                    if col in session.laps.columns:
+                        max_speed = session.laps[col].max()
+                        if pd.notna(max_speed):
+                            top_speeds.append({
+                                'speed': max_speed,
+                                'event': event['EventName'],
+                                'col': col,
+                            })
+            except Exception:
+                continue
+
+        if not results_list:
+            return ('—',) * 17 + ('No data',)
+
+        all_results = pd.concat(results_list, ignore_index=True)
+
+        # Champion — most points
+        driver_pts = all_results.groupby('Abbreviation')['Points'].sum().sort_values(ascending=False)
+        champion = driver_pts.index[0] if len(driver_pts) > 0 else '—'
+        champion_pts = int(driver_pts.iloc[0]) if len(driver_pts) > 0 else 0
+
+        # Constructor
+        team_pts = all_results.groupby('TeamName')['Points'].sum().sort_values(ascending=False)
+        constructor = team_pts.index[0] if len(team_pts) > 0 else '—'
+
+        # Most wins
+        wins = all_results[all_results['Position'] == 1].groupby('Abbreviation').size().sort_values(ascending=False)
+        most_wins_driver = wins.index[0] if len(wins) > 0 else '—'
+        most_wins_count = int(wins.iloc[0]) if len(wins) > 0 else 0
+
+        # Pole positions
+        poles_list = []
+        for _, event in races.iterrows():
+            try:
+                q = fastf1.get_session(year, event['RoundNumber'], 'Q')
+                q.load(telemetry=False, weather=False, messages=False)
+                if q.results is not None and len(q.results) > 0:
+                    poles_list.append(q.results.iloc[0]['Abbreviation'])
+            except Exception:
+                continue
+
+        pole_counts = pd.Series(poles_list).value_counts()
+        most_poles = pole_counts.index[0] if len(pole_counts) > 0 else '—'
+        most_poles_count = int(pole_counts.iloc[0]) if len(pole_counts) > 0 else 0
+
+        # Closest finish
+        closest_gap = None
+        closest_event = '—'
+        for res_df in results_list:
+            p1 = res_df[res_df['Position'] == 1]
+            p2 = res_df[res_df['Position'] == 2]
+            if len(p1) > 0 and len(p2) > 0:
+                t1 = p1.iloc[0].get('Time')
+                t2 = p2.iloc[0].get('Time')
+                if pd.notna(t1) and pd.notna(t2):
+                    gap = abs(t2.total_seconds() - t1.total_seconds()) if hasattr(t1, 'total_seconds') else None
+                    if gap and (closest_gap is None or gap < closest_gap):
+                        closest_gap = gap
+                        closest_event = res_df.iloc[0]['EventName']
+
+        closest_str = f'{closest_gap:.3f}s' if closest_gap else '—'
+
+        # Top speed
+        if top_speeds:
+            best = max(top_speeds, key=lambda x: x['speed'])
+            top_speed_str = f"{best['speed']:.0f} km/h"
+            top_speed_sub = best['event']
+        else:
+            top_speed_str = '—'
+            top_speed_sub = ''
+
+        # DNFs
+        dnfs = all_results[all_results['Status'].str.contains('DNF|Retired|Accident|Engine|Mechanical',
+                           case=False, na=False)]
+        dnf_by_driver = dnfs.groupby('Abbreviation').size().sort_values(ascending=False)
+        most_dnf = dnf_by_driver.index[0] if len(dnf_by_driver) > 0 else '—'
+        most_dnf_count = int(dnf_by_driver.iloc[0]) if len(dnf_by_driver) > 0 else 0
+
+        # Fastest lap of season
+        if fastest_laps:
+            best_lap = min(fastest_laps, key=lambda x: x['time'])
+            mins = int(best_lap['time'] // 60)
+            secs = best_lap['time'] % 60
+            fast_lap_str = f"{mins}:{secs:06.3f}"
+            fast_lap_sub = f"{best_lap['driver']} — {best_lap['event']}"
+        else:
+            fast_lap_str = '—'
+            fast_lap_sub = ''
+
+        # Driver championship table
+        driver_standings = all_results.groupby(
+            ['Abbreviation', 'FullName', 'TeamName']
+        )['Points'].sum().reset_index().sort_values('Points', ascending=False)
+        driver_standings['Pos'] = range(1, len(driver_standings) + 1)
+
+        driver_rows = []
+        for _, row in driver_standings.iterrows():
+            team_color = TEAM_COLORS.get(row['TeamName'], '#444')
+            pos = int(row['Pos'])
+            driver_rows.append(
+                html.Tr([
+                    html.Td(str(pos), className='pos'),
+                    html.Td('', className='team-color-dot',
+                            style={'background': team_color}),
+                    html.Td(row['Abbreviation'],
+                            style={'color': '#c9a84c' if pos == 1 else '#FBF9E4',
+                                   'fontWeight': '500'}),
+                    html.Td(row['FullName'],
+                            style={'color': '#888', 'fontSize': '0.7rem'}),
+                    html.Td(f"{int(row['Points'])} pts", className='pts'),
+                ], className='p1' if pos == 1 else '')
+            )
+
+        drivers_table = html.Table([
+            html.Thead(html.Tr([
+                html.Th('POS'), html.Th(''), html.Th('DRV'),
+                html.Th('NAME'), html.Th('PTS'),
+            ])),
+            html.Tbody(driver_rows),
+        ], className='champ-table')
+
+        # Constructor championship table
+        constructor_standings = all_results.groupby(
+            'TeamName'
+        )['Points'].sum().reset_index().sort_values('Points', ascending=False)
+        constructor_standings['Pos'] = range(1, len(constructor_standings) + 1)
+
+        constructor_rows = []
+        for _, row in constructor_standings.iterrows():
+            team_color = TEAM_COLORS.get(row['TeamName'], '#444')
+            pos = int(row['Pos'])
+            constructor_rows.append(
+                html.Tr([
+                    html.Td(str(pos), className='pos'),
+                    html.Td('', className='team-color-dot',
+                            style={'background': team_color}),
+                    html.Td(row['TeamName'],
+                            style={'color': '#c9a84c' if pos == 1 else '#FBF9E4'}),
+                    html.Td(f"{int(row['Points'])} pts", className='pts'),
+                ], className='p1' if pos == 1 else '')
+            )
+
+        constructors_table = html.Table([
+            html.Thead(html.Tr([
+                html.Th('POS'), html.Th(''),
+                html.Th('TEAM'), html.Th('PTS'),
+            ])),
+            html.Tbody(constructor_rows),
+        ], className='champ-table')
+
+        return (
+            f'{champion}',
+            constructor,
+            str(total_races),
+            str(most_wins_count),
+            most_wins_driver,
+            str(most_poles_count),
+            most_poles,
+            closest_str,
+            closest_event,
+            top_speed_str,
+            top_speed_sub,
+            str(most_dnf_count),
+            most_dnf,
+            fast_lap_str,
+            fast_lap_sub,
+            drivers_table,
+            constructors_table,
+            f'✓ {year} loaded',
+        )
+
+    except Exception as e:
+        print(f'Home error: {e}')
+        return ('—',) * 17 + (f'Error: {e}',)
