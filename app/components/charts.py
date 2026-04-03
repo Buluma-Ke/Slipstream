@@ -37,9 +37,8 @@ def make_lap_time_dist(laps):
     Returns:
         plotly Figure
     """
-    # Sort drivers by median lap time
     order = (
-        laps.groupby('driver')['lap_time_sec']
+        laps.groupby('driver')['laptimesec']
         .median()
         .sort_values()
         .index.tolist()
@@ -48,16 +47,16 @@ def make_lap_time_dist(laps):
     fig = px.box(
         laps,
         x='driver',
-        y='lap_time_sec',
+        y='laptimesec',
         color='team',
         color_discrete_map=TEAM_COLORS,
         category_orders={'driver': order},
         labels={
-            'lap_time_sec': 'Lap time (s)',
+            'laptimesec': 'Lap time (s)',
             'driver': 'Driver',
             'team': 'Team'
         },
-        title='Lap time distribution — Bahrain 2023',
+        title='Lap time distribution',
     )
     fig.update_layout(
         showlegend=False,
@@ -157,17 +156,15 @@ def make_strategy_strip(laps):
     Returns:
         plotly Figure
     """
-    # Detect stint boundaries — when compound changes for a driver
-    laps = laps.sort_values(['driver', 'lap_number']).copy()
+    laps = laps.sort_values(['driver', 'lapnumber']).copy()
     laps['stint_id'] = (
         laps.groupby('driver')['compound']
         .transform(lambda x: (x != x.shift()).cumsum())
     )
 
-    # Group into stints
     stints = laps.groupby(['driver', 'stint_id', 'compound']).agg(
-        start_lap=('lap_number', 'min'),
-        end_lap=('lap_number', 'max'),
+        start_lap=('lapnumber', 'min'),
+        end_lap=('lapnumber', 'max'),
     ).reset_index()
 
     stints['duration'] = stints['end_lap'] - stints['start_lap'] + 1
@@ -186,8 +183,7 @@ def make_strategy_strip(laps):
             'compound': 'Compound'
         },
         title='Tyre strategy',
-        )
-    
+    )
     fig.update_layout(
         plot_bgcolor='#1a1a1a',
         paper_bgcolor='#1a1a1a',
@@ -221,18 +217,18 @@ def make_lap_delta(laps, driver_a, driver_b):
     Returns:
         plotly Figure
     """
-    a = laps[laps['driver'] == driver_a][['lap_number', 'lap_time_sec']].set_index('lap_number')
-    b = laps[laps['driver'] == driver_b][['lap_number', 'lap_time_sec']].set_index('lap_number')
+    a = laps[laps['driver'] == driver_a][['lapnumber', 'laptimesec']].set_index('lapnumber')
+    b = laps[laps['driver'] == driver_b][['lapnumber', 'laptimesec']].set_index('lapnumber')
 
-    delta = (a['lap_time_sec'] - b['lap_time_sec']).cumsum().reset_index()
-    delta.columns = ['lap_number', 'delta']
+    delta = (a['laptimesec'] - b['laptimesec']).cumsum().reset_index()
+    delta.columns = ['lapnumber', 'delta']
 
     fig = px.line(
         delta,
-        x='lap_number',
+        x='lapnumber',
         y='delta',
         title=f'Cumulative delta — {driver_a} vs {driver_b}',
-        labels={'delta': 'Delta (s)', 'lap_number': 'Lap'},
+        labels={'delta': 'Delta (s)', 'lapnumber': 'Lap'},
         color_discrete_sequence=['#E8002D'],
     )
     fig.add_hline(y=0, line_dash='dash', line_color='gray')
@@ -260,22 +256,17 @@ if __name__ == '__main__':
     pos = ver_lap.get_pos_data()
     merged = tel.merge_channels(pos)
 
-    # Chart 1
     fig1 = make_lap_time_dist(laps)
     fig1.show()
 
-    # Chart 2
     fig2 = make_speed_trace(tel, 'VER — Lap 10')
     fig2.show()
 
-    # Chart 3
     fig3 = make_track_map(merged)
     fig3.show()
 
-    # Chart 4
     fig4 = make_strategy_strip(laps)
     fig4.show()
 
-    # Chart 5
     fig5 = make_lap_delta(laps, 'VER', 'PER')
     fig5.show()

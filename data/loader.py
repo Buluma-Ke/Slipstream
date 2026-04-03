@@ -25,11 +25,6 @@ def get_laps(session):
         pandas DataFrame of cleaned laps
     """
     laps = session.laps.copy()
-
-    # Drop laps with no recorded time
     laps = laps.dropna(subset=['LapTime'])
-
-    # Convert LapTime to seconds
     laps['LapTimeSec'] = laps['LapTime'].dt.total_seconds()
-
     return laps

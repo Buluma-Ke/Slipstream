@@ -38,11 +38,14 @@ def load_session(n_clicks, year, event, session_type):
         session = get_session(year, event, session_type)
         laps = get_laps(session)
         save_laps(laps, year, event, session_type)
+        # Lowercase columns so all charts get consistent names
+        laps.columns = [c.lower() for c in laps.columns]
         laps_json = laps.to_json(date_format='iso', orient='split')
         return laps_json, f'✅ Loaded {len(laps)} laps — {event} {year}'
     except Exception as e:
         return no_update, f'❌ Error: {e}'
     
+
 
 # --- 3. Update stat cards ---
 @callback(
@@ -55,12 +58,14 @@ def load_session(n_clicks, year, event, session_type):
 def update_stats(laps_json):
     if not laps_json:
         return '—', '—', '—', '—'
-    laps = pd.read_json(laps_json, orient='split')
-    fastest_driver = laps.loc[laps['LapTimeSec'].idxmin(), 'Driver']
-    fastest_time = laps['LapTimeSec'].min()
+    from io import StringIO
+    laps = pd.read_json(StringIO(laps_json), orient='split')
+    fastest_idx = laps['laptimesec'].idxmin()
+    fastest_driver = laps.loc[fastest_idx, 'driver']
+    fastest_time = laps['laptimesec'].min()
     total_laps = len(laps)
-    drivers = laps['Driver'].nunique()
-    fastest_team = laps.loc[laps['LapTimeSec'].idxmin(), 'Team']
+    drivers = laps['driver'].nunique()
+    fastest_team = laps.loc[fastest_idx, 'team']
     return (
         f"{fastest_driver} — {fastest_time:.3f}s",
         str(total_laps),
@@ -106,3 +111,184 @@ def show_selection(year, event, session_type):
         }
         parts.append(labels.get(session_type, session_type))
     return '📌 ' + ' — '.join(parts) if parts else ''
+
+
+
+# --- 6. Lap time distribution chart ---
+@callback(
+    Output('chart-lap-dist', 'figure'),
+    Input('store-laps', 'data'),
+)
+def update_lap_dist(laps_json):
+    if not laps_json:
+        return {}
+    laps = pd.read_json(laps_json, orient='split')
+    print("Columns:", laps.columns.tolist())
+    from app.components.charts import make_lap_time_dist
+    return make_lap_time_dist(laps)
+
+
+# --- 7. Strategy strip chart ---
+@callback(
+    Output('chart-strategy', 'figure'),
+    Input('store-laps', 'data'),
+)
+def update_strategy(laps_json):
+    if not laps_json:
+        return {}
+    from io import StringIO
+    from app.components.charts import make_strategy_strip
+    laps = pd.read_json(StringIO(laps_json), orient='split')
+    return make_strategy_strip(laps)
+
+
+# --- 8. Populate delta driver dropdowns ---
+@callback(
+    Output('dd-delta-a', 'options'),
+    Output('dd-delta-a', 'value'),
+    Output('dd-delta-b', 'options'),
+    Output('dd-delta-b', 'value'),
+    Input('store-laps', 'data'),
+)
+def update_delta_dropdowns(laps_json):
+    if not laps_json:
+        return [], None, [], None
+    from io import StringIO
+    laps = pd.read_json(StringIO(laps_json), orient='split')
+    drivers = sorted(laps['driver'].unique())
+    opts = [{'label': d, 'value': d} for d in drivers]
+    a = drivers[0] if len(drivers) > 0 else None
+    b = drivers[1] if len(drivers) > 1 else None
+    return opts, a, opts, b
+
+
+# --- 9. Delta chart ---
+@callback(
+    Output('chart-delta', 'figure'),
+    Input('store-laps', 'data'),
+    Input('dd-delta-a', 'value'),
+    Input('dd-delta-b', 'value'),
+)
+def update_delta(laps_json, driver_a, driver_b):
+    if not laps_json or not driver_a or not driver_b or driver_a == driver_b:
+        return {}
+    from io import StringIO
+    from app.components.charts import make_lap_delta
+    laps = pd.read_json(StringIO(laps_json), orient='split')
+    return make_lap_delta(laps, driver_a, driver_b)
+
+
+# --- 10. Populate telemetry driver dropdown ---
+@callback(
+    Output('dd-tel-driver', 'options'),
+    Output('dd-tel-driver', 'value'),
+    Input('store-laps', 'data'),
+)
+def update_tel_driver(laps_json):
+    if not laps_json:
+        return [], None
+    from io import StringIO
+    laps = pd.read_json(StringIO(laps_json), orient='split')
+    drivers = sorted(laps['driver'].unique())
+    opts = [{'label': d, 'value': d} for d in drivers]
+    return opts, drivers[0] if drivers else None
+
+
+# --- 11. Populate telemetry lap dropdown ---
+@callback(
+    Output('dd-tel-lap', 'options'),
+    Output('dd-tel-lap', 'value'),
+    Input('store-laps', 'data'),
+    Input('dd-tel-driver', 'value'),
+)
+def update_tel_laps(laps_json, driver):
+    if not laps_json or not driver:
+        return [], None
+    from io import StringIO
+    laps = pd.read_json(StringIO(laps_json), orient='split')
+    driver_laps = sorted(laps[laps['driver'] == driver]['lapnumber'].unique())
+    opts = [{'label': f'Lap {int(n)}', 'value': int(n)} for n in driver_laps]
+    return opts, int(driver_laps[0]) if driver_laps else None
+
+
+# --- 12. Telemetry chart ---
+@callback(
+    Output('chart-telemetry', 'figure'),
+    Input('dd-tel-driver', 'value'),
+    Input('dd-tel-lap', 'value'),
+    State('dd-year', 'value'),
+    State('dd-event', 'value'),
+    State('dd-session', 'value'),
+)
+def update_telemetry(driver, lap_number, year, event, session_type):
+    if not all([driver, lap_number, year, event, session_type]):
+        return {}
+    try:
+        from app.components.charts import make_speed_trace
+        session = get_session(year, event, session_type)
+        lap = session.laps.pick_driver(driver).pick_lap(lap_number)
+        tel = lap.get_car_data().add_distance()
+        return make_speed_trace(tel, f'{driver} — Lap {lap_number}')
+    except Exception as e:
+        print(f'Telemetry error: {e}')
+        return {}
+    
+
+
+
+# --- 13. Populate map driver dropdown ---
+@callback(
+    Output('dd-map-driver', 'options'),
+    Output('dd-map-driver', 'value'),
+    Input('store-laps', 'data'),
+)
+def update_map_driver(laps_json):
+    if not laps_json:
+        return [], None
+    from io import StringIO
+    laps = pd.read_json(StringIO(laps_json), orient='split')
+    drivers = sorted(laps['driver'].unique())
+    opts = [{'label': d, 'value': d} for d in drivers]
+    return opts, drivers[0] if drivers else None
+
+
+# --- 14. Populate map lap dropdown ---
+@callback(
+    Output('dd-map-lap', 'options'),
+    Output('dd-map-lap', 'value'),
+    Input('store-laps', 'data'),
+    Input('dd-map-driver', 'value'),
+)
+def update_map_laps(laps_json, driver):
+    if not laps_json or not driver:
+        return [], None
+    from io import StringIO
+    laps = pd.read_json(StringIO(laps_json), orient='split')
+    driver_laps = sorted(laps[laps['driver'] == driver]['lapnumber'].unique())
+    opts = [{'label': f'Lap {int(n)}', 'value': int(n)} for n in driver_laps]
+    return opts, int(driver_laps[0]) if driver_laps else None
+
+
+# --- 15. Track map chart ---
+@callback(
+    Output('chart-map', 'figure'),
+    Input('dd-map-driver', 'value'),
+    Input('dd-map-lap', 'value'),
+    State('dd-year', 'value'),
+    State('dd-event', 'value'),
+    State('dd-session', 'value'),
+)
+def update_map(driver, lap_number, year, event, session_type):
+    if not all([driver, lap_number, year, event, session_type]):
+        return {}
+    try:
+        from app.components.charts import make_track_map
+        session = get_session(year, event, session_type)
+        lap = session.laps.pick_driver(driver).pick_lap(lap_number)
+        tel = lap.get_car_data().add_distance()
+        pos = lap.get_pos_data()
+        merged = tel.merge_channels(pos)
+        return make_track_map(merged)
+    except Exception as e:
+        print(f'Map error: {e}')
+        return {}
