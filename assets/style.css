@@ -475,6 +475,7 @@ body::before {
     top: 0; left: 0; right: 0;
     height: 2px;
     background: var(--ocean);
+    display: none;
 }
 
 .info-card.accent-red::before { background: var(--red); }
@@ -637,40 +638,40 @@ body::before {
 .year-pill-single {
     display: flex;
     align-items: center;
-    gap: 4px;
-    padding: 5px 14px;
+    gap: 6px;
+    padding: 4px 10px;
     border-radius: 0;
     border: none;
     background: transparent;
     color: var(--pearl);
     cursor: pointer;
     font-family: 'Titillium Web', sans-serif;
-    font-size: 0.78rem;
+    font-size: 0.68rem;
     font-weight: 600;
     letter-spacing: 0.08em;
     user-select: none;
-    transition: border-color 0.15s ease;
+    width: fit-content;
 }
 
 
 #pill-year-display {
     background: rgba(91, 136, 178, 0.15);
-    padding: 1px 8px;
-    border-radius: 10px;
+    padding: 1px 6px;
+    border-radius: 8px;
     font-weight: 700;
-    font-size: 0.78rem;
+    font-size: 0.68rem;
     color: var(--pearl);
 }
 
 .year-pill-menu {
     position: absolute;
-    top: calc(100% + 6px);
+    top: calc(100% + 4px);
     left: 0;
     background: rgba(8, 14, 24, 0.97);
     border: 1px solid rgba(91, 136, 178, 0.2);
-    border-radius: 8px;
-    padding: 6px 0;
-    min-width: 140px;
+    border-radius: 6px;
+    padding: 4px 0;
+    min-width: 120px;
     z-index: 9999;
     box-shadow: 0 8px 24px rgba(0,0,0,0.4);
 }
@@ -684,10 +685,10 @@ body::before {
 
 .year-dropdown-item {
     font-family: 'Titillium Web', sans-serif;
-    font-size: 0.78rem;
+    font-size: 0.72rem;
     font-weight: 600;
     color: #888;
-    padding: 7px 16px;
+    padding: 5px 14px;
     cursor: pointer;
     letter-spacing: 0.08em;
     transition: background 0.12s, color 0.12s;
@@ -699,8 +700,8 @@ body::before {
 }
 
 .pill-label {
-    font-size: 0.65rem;
-    color: #888;
+    font-size: 0.52rem;
+    color: #666;
     letter-spacing: 0.15em;
     text-transform: uppercase;
     font-family: 'Titillium Web', sans-serif;
@@ -711,6 +712,6 @@ body::before {
     display: flex;
     flex-direction: row;
     align-items: center;
-    gap: 12px;
+    gap: 8px;
     position: relative;
 }
