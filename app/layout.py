@@ -14,28 +14,6 @@ def build_layout():
 
         # Main content
         html.Div([
-            # Top bar — stat pills
-            html.Div([
-                html.Div('F1 ANALYTICS', style={
-                    'fontSize': '0.55rem',
-                    'color': '#E8002D',
-                    'letterSpacing': '0.3em',
-                    'fontFamily': 'Barlow Condensed, sans-serif',
-                }),
-                html.Div(id='stat-fastest', className='stat-pill',
-                         children=[html.Div('Fastest Lap', className='label'),
-                                   html.Div('—', className='value')]),
-                html.Div(id='stat-laps', className='stat-pill',
-                         children=[html.Div('Total Laps', className='label'),
-                                   html.Div('—', className='value')]),
-                html.Div(id='stat-drivers', className='stat-pill',
-                         children=[html.Div('Drivers', className='label'),
-                                   html.Div('—', className='value')]),
-                html.Div(id='stat-team', className='stat-pill',
-                         children=[html.Div('Fastest Team', className='label'),
-                                   html.Div('—', className='value')]),
-            ], className='top-bar'),
-
                 # Page content — home loads by default
                 html.Div(id='page-content', className='page-content',
                         children=__import__('app.pages.home', fromlist=['layout']).layout()),

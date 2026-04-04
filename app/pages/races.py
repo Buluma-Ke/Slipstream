@@ -25,13 +25,13 @@ def layout():
                 dcc.Dropdown(
                     id='dd-session',
                     options=[
-                        {'label': 'Race',             'value': 'R'},
-                        {'label': 'Qualifying',       'value': 'Q'},
-                        {'label': 'Sprint',           'value': 'S'},
-                        {'label': 'Sprint Qualifying','value': 'SQ'},
-                        {'label': 'FP1',              'value': 'FP1'},
-                        {'label': 'FP2',              'value': 'FP2'},
-                        {'label': 'FP3',              'value': 'FP3'},
+                        {'label': 'Race',              'value': 'R'},
+                        {'label': 'Qualifying',        'value': 'Q'},
+                        {'label': 'Sprint',            'value': 'S'},
+                        {'label': 'Sprint Qualifying', 'value': 'SQ'},
+                        {'label': 'FP1',               'value': 'FP1'},
+                        {'label': 'FP2',               'value': 'FP2'},
+                        {'label': 'FP3',               'value': 'FP3'},
                     ],
                     value='R',
                     clearable=False,
@@ -51,6 +51,23 @@ def layout():
                     className='mb-0',
                 ),
             ], className='selector-col status'),
+
+            # Stat pills — right side of selector row
+            html.Div([
+                html.Div(id='stat-fastest', className='stat-pill',
+                         children=[html.Div('Fastest Lap', className='label'),
+                                   html.Div('—', className='value')]),
+                html.Div(id='stat-laps', className='stat-pill',
+                         children=[html.Div('Total Laps', className='label'),
+                                   html.Div('—', className='value')]),
+                html.Div(id='stat-drivers', className='stat-pill',
+                         children=[html.Div('Drivers', className='label'),
+                                   html.Div('—', className='value')]),
+                html.Div(id='stat-team', className='stat-pill',
+                         children=[html.Div('Fastest Team', className='label'),
+                                   html.Div('—', className='value')]),
+            ], style={'display': 'flex', 'marginLeft': 'auto', 'alignItems': 'center'}),
+
         ], className='selector-row'),
 
         # Chart tabs

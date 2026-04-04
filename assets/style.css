@@ -8,7 +8,7 @@
     --ocean: #5B88B2;
     --accent: #c9a84c;
     --red: #E8002D;
-    --card-bg: rgba(16, 24, 36, 0.85);
+    --card-bg: rgba(16, 24, 36, 0.45);
     --card-border: rgba(91, 136, 178, 0.15);
     --surface: rgba(8, 14, 24, 0.92);
 }
@@ -43,7 +43,7 @@ body::before {
     top: 0;
     height: 100vh;
     width: 220px;
-    background: var(--surface);
+    background: rgba(0, 0, 0, 0.8);
     border-right: 1px solid rgba(91,136,178,0.1);
     display: flex;
     flex-direction: column;
@@ -229,7 +229,7 @@ body::before {
     align-items: flex-end;
     gap: 8px;
     padding: 8px 16px;
-    background: var(--surface);
+    background: rgba(8, 14, 24, 0.6);
     border-bottom: 1px solid rgba(91,136,178,0.1);
 }
 
@@ -330,7 +330,7 @@ body::before {
 .nav-tabs {
     border-bottom: 1px solid rgba(91,136,178,0.1) !important;
     padding: 0 16px !important;
-    background: var(--surface) !important;
+    background: rgba(8, 14, 24, 0.6) !important;
     margin-bottom: 0 !important;
 }
 
