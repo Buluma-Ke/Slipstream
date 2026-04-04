@@ -23,18 +23,31 @@ def layout():
         html.Div([
             html.Div('Season Overview', className='home-page-title'),
             html.Div([
-                html.Div('SEASON', className='pill-label'),
+                html.Div([
+                    html.Span('⚑', style={
+                        'fontSize': '0.85rem',
+                        'marginRight': '6px',
+                        'color': '#E8002D',
+                    }),
+                    html.Span('Season', className='pill-label', style={'marginBottom': '0', 'marginRight': '8px'}),
+                    html.Span(id='pill-year-display', children='2025'),
+                ], className='year-pill-single', id='year-pill-toggle'),
                 html.Div(
-                    [html.Div(str(y),
-                        id={'type': 'year-pill', 'index': y},
-                        className='year-pill active' if y == 2025 else 'year-pill',
-                    ) for y in range(2025, 2017, -1)],
-                    className='year-pill-row',
+                    [html.Div(str(y), id={'type': 'year-pill', 'index': y},
+                            className='year-dropdown-item')
+                    for y in range(2025, 2017, -1)],
+                    id='year-pill-dropdown',
+                    className='year-pill-menu',
+                    style={'display': 'none'},
                 ),
-                html.Div(id='home-loading-status'),
-            ], className='home-year-selector'),
+                html.Div(
+                    id='year-pill-overlay',
+                    className='year-pill-overlay',
+                    style={'display': 'none'},
+                    n_clicks=0,
+),
+            ], className='home-year-selector', style={'position': 'relative'}),
         ], className='home-top-row'),
-
         
         # Row 1 — headline cards
         html.Div([

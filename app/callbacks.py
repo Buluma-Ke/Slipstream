@@ -376,7 +376,6 @@ def route_page(*args):
     Output('home-fact-dnf-sub', 'children'),
     Output('home-drivers-table', 'children'),
     Output('home-constructors-table', 'children'),
-    Output('home-loading-status', 'children'),
     Input('home-store-year', 'data'),
 )
 
@@ -410,7 +409,7 @@ def update_home(year):
                 continue
 
         if not results_list:
-            return ('—',) * 15 + ('No data',)
+            return ('—',) * 15 
 
         all_results = pd.concat(results_list, ignore_index=True)
 
@@ -536,28 +535,50 @@ def update_home(year):
             most_dnf,
             drivers_table,
             constructors_table,
-            f'✓ {year} loaded',
         )
 
     except Exception as e:
         print(f'Home error: {e}')
-        return ('—',) * 15 + (f'Error: {e}',)
+        return ('—',) * 15 
     
 
-# --- Home year pill selector ---
+# --- Home year pill toggle ---
+@callback(
+    Output('year-pill-dropdown', 'style', allow_duplicate=True),
+    Output('year-pill-overlay', 'style', allow_duplicate=True),
+    Input('year-pill-toggle', 'n_clicks'),
+    State('year-pill-dropdown', 'style'),
+    prevent_initial_call=True,
+)
+def toggle_year_dropdown(n_clicks, current_style):
+    if isinstance(current_style, dict) and current_style.get('display') == 'none':
+        return {'display': 'block'}, {'display': 'block'}
+    return {'display': 'none'}, {'display': 'none'}
+
+
+# --- Home year pill select ---
 @callback(
     Output('home-store-year', 'data'),
-    Output({'type': 'year-pill', 'index': ALL}, 'className'),
+    Output('pill-year-display', 'children'),
+    Output('year-pill-dropdown', 'style', allow_duplicate=True),
     Input({'type': 'year-pill', 'index': ALL}, 'n_clicks'),
     State({'type': 'year-pill', 'index': ALL}, 'id'),
     prevent_initial_call=True,
 )
-def select_year_pill(n_clicks, ids):
+def select_year(n_clicks, ids):
     from dash import ctx
-    from dash.dependencies import ALL
     triggered = ctx.triggered_id
     if not triggered:
-        return 2025, ['year-pill active' if i['index'] == 2025 else 'year-pill' for i in ids]
+        return 2025, '2025', {'display': 'none'}
     selected = triggered['index']
-    classes = ['year-pill active' if i['index'] == selected else 'year-pill' for i in ids]
-    return selected, classes
+    return selected, str(selected), {'display': 'none'}
+
+# --- Close dropdown on outside click ---
+@callback(
+    Output('year-pill-dropdown', 'style', allow_duplicate=True),
+    Output('year-pill-overlay', 'style'),
+    Input('year-pill-overlay', 'n_clicks'),
+    prevent_initial_call=True,
+)
+def close_on_outside(n_clicks):
+    return {'display': 'none'}, {'display': 'none'}

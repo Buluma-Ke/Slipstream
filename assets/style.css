@@ -610,48 +610,77 @@ body::before {
 }
 
 /* ── Year pill selector ── */
-.year-pill-row {
-    display: flex !important;
-    flex-direction: row !important;
-    gap: 6px;
-    flex-wrap: wrap;
+.year-pill-single {
+    display: flex;
     align-items: center;
-}
-
-.year-pill {
-    font-family: 'Titillium Web', sans-serif;
-    font-size: 0.75rem;
-    font-weight: 600;
-    letter-spacing: 0.1em;
-    padding: 4px 12px;
-    border-radius: 20px;
-    border: 1px solid rgba(91, 136, 178, 0.2);
-    background: rgba(0, 0, 0, 0.4);
-    color: #666;
+    gap: 4px;
+    padding: 5px 14px;
+    border-radius: 0;
+    border: none;
+    background: transparent;
+    color: var(--pearl);
     cursor: pointer;
-    transition: all 0.15s ease;
+    font-family: 'Titillium Web', sans-serif;
+    font-size: 0.78rem;
+    font-weight: 600;
+    letter-spacing: 0.08em;
     user-select: none;
+    transition: border-color 0.15s ease;
 }
 
-.year-pill:hover {
-    border-color: var(--ocean);
+
+#pill-year-display {
+    background: rgba(91, 136, 178, 0.15);
+    padding: 1px 8px;
+    border-radius: 10px;
+    font-weight: 700;
+    font-size: 0.78rem;
     color: var(--pearl);
 }
 
-.year-pill.active {
-    background: var(--red);
-    border-color: var(--red);
-    color: #fff;
+.year-pill-menu {
+    position: absolute;
+    top: calc(100% + 6px);
+    left: 0;
+    background: rgba(8, 14, 24, 0.97);
+    border: 1px solid rgba(91, 136, 178, 0.2);
+    border-radius: 8px;
+    padding: 6px 0;
+    min-width: 140px;
+    z-index: 9999;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+}
+
+/* Click outside overlay to close dropdown */
+.year-pill-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 9998;
+}
+
+.year-dropdown-item {
+    font-family: 'Titillium Web', sans-serif;
+    font-size: 0.78rem;
+    font-weight: 600;
+    color: #888;
+    padding: 7px 16px;
+    cursor: pointer;
+    letter-spacing: 0.08em;
+    transition: background 0.12s, color 0.12s;
+}
+
+.year-dropdown-item:hover {
+    background: rgba(91, 136, 178, 0.08);
+    color: var(--pearl);
 }
 
 .pill-label {
-    font-size: 0.5rem;
-    color: #555;
-    letter-spacing: 0.2em;
+    font-size: 0.65rem;
+    color: #888;
+    letter-spacing: 0.15em;
     text-transform: uppercase;
     font-family: 'Titillium Web', sans-serif;
     font-weight: 600;
-    margin-bottom: 4px;
 }
 
 .home-year-selector {
@@ -659,4 +688,5 @@ body::before {
     flex-direction: row;
     align-items: center;
     gap: 12px;
+    position: relative;
 }
