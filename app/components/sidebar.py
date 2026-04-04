@@ -1,16 +1,15 @@
 from dash import html
-import dash_bootstrap_components as dbc
+from dash_iconify import DashIconify
 
-# Nav items — (id, icon, label)
 NAV_ITEMS = [
-    ('home',        '⊞',  'Home'),
-    ('schedule',    '◎',  'Schedule'),
-    ('standings',   '🏆', 'Standings'),
-    ('races',       '🏎', 'Races'),
-    ('drivers',     '👤', 'Drivers'),
-    ('teams',       '🏗', 'Teams'),
-    ('telemetry',   '📡', 'Telemetry'),
-    ('predictions', '🔮', 'Predictions'),
+    ('home',        'tabler:layout-2',        'Home'),
+    ('schedule',    'tabler:calendar-event',   'Schedule'),
+    ('standings',   'tabler:trophy',           'Standings'),
+    ('races',       'tabler:steering-wheel',   'Races'),
+    ('drivers',     'tabler:helmet',           'Drivers'),
+    ('teams',       'tabler:users-group',      'Teams'),
+    ('telemetry',   'tabler:activity',         'Telemetry'),
+    ('predictions', 'tabler:chart-dots',       'Predictions'),
 ]
 
 
@@ -22,7 +21,7 @@ def build_sidebar():
                 id=f'nav-{page_id}',
                 className='nav-item',
                 children=[
-                    html.Span(icon, className='nav-icon'),
+                    DashIconify(icon=icon, width=18, className='nav-icon'),
                     html.Span(label, className='nav-label'),
                 ],
                 **{'data-page': page_id},
@@ -30,20 +29,17 @@ def build_sidebar():
         )
 
     return html.Div([
-        # Logo area
         html.Div([
             html.Div('S', className='sidebar-logo-icon'),
             html.Div('SLIPSTREAM', className='sidebar-logo-text'),
         ], className='sidebar-logo'),
 
-        # Nav links
         html.Div(nav_links, className='sidebar-nav'),
 
-        # Collapse toggle at bottom
-        html.Div(
-            html.Span('◀', id='sidebar-toggle-icon'),
-            id='sidebar-toggle',
-            className='sidebar-toggle',
-        ),
+        html.Div([
+            DashIconify(icon='tabler:chevrons-left', width=18,
+                        id='sidebar-toggle-icon'),
+            html.Span('Collapse', className='nav-label'),
+        ], id='sidebar-toggle', className='sidebar-toggle nav-item'),
 
     ], id='sidebar', className='sidebar expanded')

@@ -150,18 +150,42 @@ body::before {
 }
 
 .sidebar-toggle {
-    padding: 12px 14px;
+    padding: 10px 14px;
     cursor: pointer;
     border-top: 1px solid rgba(91,136,178,0.1);
     display: flex;
     align-items: center;
-    justify-content: center;
-    color: #444;
-    font-size: 0.7rem;
-    transition: color 0.15s ease;
+    gap: 12px;
+    color: #555;
+    transition: color 0.15s ease, background 0.15s ease;
+    white-space: nowrap;
 }
 
-.sidebar-toggle:hover { color: var(--red); }
+.sidebar-toggle:hover {
+    color: var(--red);
+    background: rgba(232,0,45,0.06);
+}
+
+/* ── Responsive ── */
+@media (max-width: 768px) {
+    .sidebar {
+        width: 52px;
+    }
+
+    .sidebar.expanded {
+        width: 220px;
+        position: fixed;
+        z-index: 999;
+    }
+
+    .main-content {
+        margin-left: 52px;
+    }
+
+    .main-content.expanded {
+        margin-left: 52px;
+    }
+}
 
 /* ── Main content ── */
 .main-content {

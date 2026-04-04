@@ -315,15 +315,15 @@ def update_map(driver, lap_number, year, event, session_type):
 @callback(
     Output('sidebar', 'className'),
     Output('main-content', 'className'),
-    Output('sidebar-toggle-icon', 'children'),
+    Output('sidebar-toggle-icon', 'icon'),
     Input('sidebar-toggle', 'n_clicks'),
     State('sidebar', 'className'),
     prevent_initial_call=True,
 )
 def toggle_sidebar(n_clicks, current_class):
     if 'collapsed' in current_class:
-        return 'sidebar expanded', 'main-content', '◀'
-    return 'sidebar collapsed', 'main-content expanded', '▶'
+        return 'sidebar expanded', 'main-content', 'tabler:chevrons-left'
+    return 'sidebar collapsed', 'main-content expanded', 'tabler:chevrons-right'
 
 
 # --- Page routing ---

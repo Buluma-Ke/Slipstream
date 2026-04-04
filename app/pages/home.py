@@ -1,4 +1,5 @@
 from dash import html, dcc, callback, Output, Input
+from dash_iconify import DashIconify
 import fastf1
 import pandas as pd
 
@@ -24,11 +25,8 @@ def layout():
             html.Div('Season Overview', className='home-page-title'),
             html.Div([
                 html.Div([
-                    html.Span('⚑', style={
-                        'fontSize': '0.85rem',
-                        'marginRight': '6px',
-                        'color': '#E8002D',
-                    }),
+                DashIconify(icon='tabler:flag', width=14, 
+                            style={'marginRight': '6px', 'color': '#E8002D'}),
                     html.Span('Season', className='pill-label', style={'marginBottom': '0', 'marginRight': '8px'}),
                     html.Span(id='pill-year-display', children='2025'),
                 ], className='year-pill-single', id='year-pill-toggle'),
@@ -52,21 +50,24 @@ def layout():
         # Row 1 — headline cards
         html.Div([
             html.Div([
-                html.Div('⚡', className='card-icon'),
+                DashIconify(icon='tabler:star', width=22, 
+                    className='card-icon', color='#5B88B2'),
                 html.Div('Champion', className='card-label'),
                 html.Div('—', className='card-value large', id='home-stat-champion'),
                 html.Div('—', className='card-sub', id='home-stat-champion-pts'),
             ], className='info-card accent-gold'),
 
             html.Div([
-                html.Div('🏗', className='card-icon'),
+                DashIconify(icon='tabler:building-factory', width=22, 
+                    className='card-icon', color='#5B88B2'),
                 html.Div('Winning Constructor', className='card-label'),
                 html.Div('—', className='card-value', id='home-stat-constructor'),
                 html.Div('—', className='card-sub', id='home-stat-constructor-pts'),
             ], className='info-card accent-red'),
 
             html.Div([
-                html.Div('🏁', className='card-icon'),
+                DashIconify(icon='tabler:flag-2', width=22,
+                    className='card-icon', color='#5B88B2'),
                 html.Div('Total Races', className='card-label'),
                 html.Div('—', className='card-value large', id='home-stat-races'),
                 html.Div('rounds completed', className='card-sub'),
@@ -76,28 +77,32 @@ def layout():
         # Row 2 — fun fact cards
         html.Div([
             html.Div([
-                html.Div('🏆', className='card-icon'),
+                DashIconify(icon='tabler:podium', width=22, 
+                    className='card-icon', color='#5B88B2'),
                 html.Div('Most Wins', className='card-label'),
                 html.Div('—', className='card-value', id='home-fact-mostwins'),
                 html.Div('—', className='card-sub', id='home-fact-mostwins-sub'),
             ], className='info-card'),
 
             html.Div([
-                html.Div('🎯', className='card-icon'),
+                DashIconify(icon='tabler:clock-bolt', width=22, 
+                    className='card-icon', color='#5B88B2'),
                 html.Div('Most Pole Positions', className='card-label'),
                 html.Div('—', className='card-value', id='home-fact-poles'),
                 html.Div('—', className='card-sub', id='home-fact-poles-sub'),
             ], className='info-card'),
 
             html.Div([
-                html.Div('⏱', className='card-icon'),
+                DashIconify(icon='tabler:arrows-diff', width=22, 
+                    className='card-icon', color='#5B88B2'),
                 html.Div('Closest Finish', className='card-label'),
                 html.Div('—', className='card-value', id='home-fact-closest'),
                 html.Div('—', className='card-sub', id='home-fact-closest-sub'),
             ], className='info-card accent-gold'),
 
             html.Div([
-                html.Div('💀', className='card-icon'),
+                DashIconify(icon='tabler:skull', width=22,
+                    className='card-icon', color='#5B88B2'),
                 html.Div('Most DNFs', className='card-label'),
                 html.Div('—', className='card-value', id='home-fact-dnf'),
                 html.Div('—', className='card-sub', id='home-fact-dnf-sub'),
