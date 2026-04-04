@@ -608,3 +608,55 @@ body::before {
     color: #555;
     letter-spacing: 0.1em;
 }
+
+/* ── Year pill selector ── */
+.year-pill-row {
+    display: flex !important;
+    flex-direction: row !important;
+    gap: 6px;
+    flex-wrap: wrap;
+    align-items: center;
+}
+
+.year-pill {
+    font-family: 'Titillium Web', sans-serif;
+    font-size: 0.75rem;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    padding: 4px 12px;
+    border-radius: 20px;
+    border: 1px solid rgba(91, 136, 178, 0.2);
+    background: rgba(0, 0, 0, 0.4);
+    color: #666;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    user-select: none;
+}
+
+.year-pill:hover {
+    border-color: var(--ocean);
+    color: var(--pearl);
+}
+
+.year-pill.active {
+    background: var(--red);
+    border-color: var(--red);
+    color: #fff;
+}
+
+.pill-label {
+    font-size: 0.5rem;
+    color: #555;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    font-family: 'Titillium Web', sans-serif;
+    font-weight: 600;
+    margin-bottom: 4px;
+}
+
+.home-year-selector {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 12px;
+}

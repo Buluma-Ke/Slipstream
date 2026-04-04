@@ -1,5 +1,5 @@
 import pandas as pd
-from dash import Input, Output, State, callback, no_update, html
+from dash import Input, Output, State, callback, no_update, html, ALL
 from data.loader import get_session, get_laps
 from data.store import save_laps, query_laps
 import fastf1
@@ -377,7 +377,7 @@ def route_page(*args):
     Output('home-drivers-table', 'children'),
     Output('home-constructors-table', 'children'),
     Output('home-loading-status', 'children'),
-    Input('home-dd-year', 'value'),
+    Input('home-store-year', 'data'),
 )
 
 
@@ -542,3 +542,22 @@ def update_home(year):
     except Exception as e:
         print(f'Home error: {e}')
         return ('—',) * 15 + (f'Error: {e}',)
+    
+
+# --- Home year pill selector ---
+@callback(
+    Output('home-store-year', 'data'),
+    Output({'type': 'year-pill', 'index': ALL}, 'className'),
+    Input({'type': 'year-pill', 'index': ALL}, 'n_clicks'),
+    State({'type': 'year-pill', 'index': ALL}, 'id'),
+    prevent_initial_call=True,
+)
+def select_year_pill(n_clicks, ids):
+    from dash import ctx
+    from dash.dependencies import ALL
+    triggered = ctx.triggered_id
+    if not triggered:
+        return 2025, ['year-pill active' if i['index'] == 2025 else 'year-pill' for i in ids]
+    selected = triggered['index']
+    classes = ['year-pill active' if i['index'] == selected else 'year-pill' for i in ids]
+    return selected, classes

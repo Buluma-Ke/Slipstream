@@ -19,22 +19,23 @@ TEAM_COLORS = {
 def layout():
     return html.Div([
 
-        # Top row — title + year selector
+        # Top row — title + pill year selector
         html.Div([
             html.Div('Season Overview', className='home-page-title'),
             html.Div([
-                html.Div('Season', className='home-year-label'),
-                dcc.Dropdown(
-                    id='home-dd-year',
-                    options=[{'label': y, 'value': y} for y in range(2025, 2017, -1)],
-                    value=2024,
-                    clearable=False,
-                    style={'width': '90px'},
+                html.Div('SEASON', className='pill-label'),
+                html.Div(
+                    [html.Div(str(y),
+                        id={'type': 'year-pill', 'index': y},
+                        className='year-pill active' if y == 2025 else 'year-pill',
+                    ) for y in range(2025, 2017, -1)],
+                    className='year-pill-row',
                 ),
                 html.Div(id='home-loading-status'),
             ], className='home-year-selector'),
         ], className='home-top-row'),
 
+        
         # Row 1 — headline cards
         html.Div([
             html.Div([
