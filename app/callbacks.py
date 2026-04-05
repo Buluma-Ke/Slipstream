@@ -15,6 +15,41 @@ TEAM_COLORS = {
     'RB': '#6692FF',
     'Kick Sauber': '#52E252',
     'Haas F1 Team': '#B6BABD',
+    'Toro Rosso':  '#6692FF',
+    'AlphaTauri':  '#6692FF',
+    'RB':          '#6692FF',
+    'Alfa Romeo':  '#52E252',
+    'Racing Point': '#229971',
+    'Force India':  '#229971',
+    'Renault':  '#FF87BC',
+    'Visa Cash App RB': '#6692FF',
+    'Visa Cash App RB Formula One Team': '#6692FF',
+    'RB Formula One Team': '#6692FF',
+}
+
+TEAM_LOGOS = {
+    'Red Bull Racing':  'rbr-normalized-logo',
+    'Ferrari':          'ferrari-normalized-logo',
+    'Mercedes':         '2026-mercedes-normalized-logo',
+    'McLaren':          'mclaren-normalized-logo',
+    'Aston Martin':     'aston-martin-normalized-logo',
+    'Alpine':           'alpine-normalized-logo',
+    'Williams':         '2026-williams-normalized-logo',
+    'RB':               'rb-normalized-logo',
+    'Kick Sauber':      'kick-sauber-normalized-logo',
+    'Haas F1 Team':     'haas-normalized-logo',
+    'Audi':             'audi-normalized-logo',
+    'Cadillac':         'cadillac-normalized-logo',
+    'Toro Rosso':  'rb-normalized-logo',
+    'AlphaTauri':  'rb-normalized-logo',
+    'RB':          'rb-normalized-logo',
+    'Alfa Romeo':  'kick-sauber-normalized-logo',
+    'Racing Point': 'aston-martin-normalized-logo',
+    'Force India':  'aston-martin-normalized-logo',
+    'Renault':  'alpine-normalized-logo',
+    'Visa Cash App RB': 'rb-normalized-logo',
+    'Visa Cash App RB Formula One Team': 'rb-normalized-logo',
+    'RB Formula One Team': 'rb-normalized-logo',
 }
 
 
@@ -469,18 +504,28 @@ def update_home(year):
         driver_rows = []
         for _, row in driver_standings.iterrows():
             team_color = TEAM_COLORS.get(row['TeamName'], '#444')
+            logo_file = TEAM_LOGOS.get(row['TeamName'], None)
             pos = int(row['Pos'])
             driver_rows.append(
                 html.Tr([
                     html.Td(str(pos), className='pos'),
-                    html.Td('', className='team-dot',
-                            style={'background': team_color,
-                                   'width': '3px', 'padding': '0 3px'}),
+                    html.Td(
+                        html.Img(
+                            src=f'/assets/logos/{logo_file}.avif',
+                            style={'height': '16px', 'width': '28px',
+                                'objectFit': 'contain'},
+                        ) if logo_file else html.Div(
+                            style={'width': '4px', 'height': '100%',
+                                'background': team_color}
+                        ),
+                        style={'width': '32px', 'padding': '0 4px'},
+                    ),
                     html.Td(row['Abbreviation'], className='driver-abbr'),
                     html.Td(row['FullName'], className='driver-name'),
-                    html.Td(str(int(row['Points'])), className='pts'),
+                    html.Td(f"{int(row['Points'])}", className='pts'),
                 ], className='p1' if pos == 1 else '')
             )
+ 
 
         drivers_table = html.Table([
             html.Thead(html.Tr([
@@ -499,15 +544,24 @@ def update_home(year):
         constructor_rows = []
         for _, row in constructor_standings.iterrows():
             team_color = TEAM_COLORS.get(row['TeamName'], '#444')
+            logo_file = TEAM_LOGOS.get(row['TeamName'], None)
             pos = int(row['Pos'])
             constructor_rows.append(
                 html.Tr([
                     html.Td(str(pos), className='pos'),
-                    html.Td('', className='team-dot',
-                            style={'background': team_color,
-                                   'width': '3px', 'padding': '0 3px'}),
+                    html.Td(
+                        html.Img(
+                            src=f'/assets/logos/{logo_file}.avif',
+                            style={'height': '16px', 'width': '28px',
+                                'objectFit': 'contain'},
+                        ) if logo_file else html.Div(
+                            style={'width': '4px', 'height': '100%',
+                                'background': team_color}
+                        ),
+                        style={'width': '32px', 'padding': '0 4px'},
+                    ),
                     html.Td(row['TeamName']),
-                    html.Td(str(int(row['Points'])), className='pts'),
+                    html.Td(f"{int(row['Points'])}", className='pts'),
                 ], className='p1' if pos == 1 else '')
             )
 
