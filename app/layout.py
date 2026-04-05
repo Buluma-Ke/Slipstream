@@ -9,6 +9,7 @@ def build_layout():
         dcc.Store(id='store-laps', storage_type='memory'),
         dcc.Store(id='store-page', data='home', storage_type='memory'),
         dcc.Store(id='home-store-year', data=2025),
+        dcc.Store(id='schedule-store-year', data=2025),
 
         # Sidebar
         build_sidebar(),

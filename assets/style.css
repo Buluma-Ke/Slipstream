@@ -715,3 +715,119 @@ body::before {
     gap: 8px;
     position: relative;
 }
+
+
+
+/* ── Schedule page ── */
+.schedule-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+    gap: 10px;
+    padding: 0 4px;
+}
+
+.race-card {
+    background: var(--card-bg);
+    border: 1px solid var(--card-border);
+    border-radius: 8px;
+    padding: 14px 16px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    cursor: pointer;
+    transition: border-color 0.15s, background 0.15s;
+    position: relative;
+    overflow: hidden;
+}
+
+.race-card:hover {
+    border-color: rgba(232, 0, 45, 0.4);
+    background: rgba(16, 24, 36, 0.7);
+}
+
+.card-badges {
+    display: flex;
+    gap: 6px;
+    margin-bottom: 8px;
+    align-items: center;
+}
+
+.round-badge {
+    font-family: 'Titillium Web', sans-serif;
+    font-size: 0.6rem;
+    font-weight: 700;
+    letter-spacing: 0.15em;
+    color: #666;
+    padding: 2px 7px;
+    border: 1px solid #2a2a2a;
+    border-radius: 3px;
+}
+
+.session-badge {
+    font-family: 'Titillium Web', sans-serif;
+    font-size: 0.58rem;
+    font-weight: 700;
+    letter-spacing: 0.15em;
+    padding: 2px 7px;
+    border-radius: 3px;
+    text-transform: uppercase;
+}
+
+.session-badge.sprint {
+    background: rgba(130, 40, 200, 0.2);
+    color: #b06ee8;
+    border: 1px solid rgba(130, 40, 200, 0.3);
+}
+
+.race-card-name {
+    font-family: 'Titillium Web', sans-serif;
+    font-size: 1.2rem;
+    font-weight: 700;
+    color: var(--pearl);
+    letter-spacing: 0.02em;
+}
+
+.race-card-title {
+    display: flex;
+    align-items: center;
+    margin-bottom: 6px;
+}
+
+.race-card-date {
+    font-size: 0.65rem;
+    color: #666;
+    letter-spacing: 0.08em;
+    font-family: 'Titillium Web', sans-serif;
+}
+
+.race-card-left {
+    flex: 1;
+}
+
+.race-card-right {
+    width: 120px;
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+}
+
+.track-img {
+    width: 120px;
+    height: 70px;
+    object-fit: contain;
+    opacity: 0.7;
+    filter: brightness(1.2);
+    transition: opacity 0.15s;
+}
+
+.race-card:hover .track-img {
+    opacity: 1;
+}
+
+.track-img-placeholder {
+    width: 120px;
+    height: 70px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}

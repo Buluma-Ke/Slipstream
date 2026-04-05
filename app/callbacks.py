@@ -582,3 +582,94 @@ def select_year(n_clicks, ids):
 )
 def close_on_outside(n_clicks):
     return {'display': 'none'}, {'display': 'none'}
+
+
+# ── Schedule page ─────────────────────────────────────────────────────────────
+@callback(
+    Output('schedule-year-pill-dropdown', 'style', allow_duplicate=True),
+    Output('schedule-year-overlay', 'style', allow_duplicate=True),
+    Input('schedule-year-pill-toggle', 'n_clicks'),
+    State('schedule-year-pill-dropdown', 'style'),
+    prevent_initial_call=True,
+)
+def toggle_schedule_year(n_clicks, current_style):
+    if isinstance(current_style, dict) and current_style.get('display') == 'none':
+        return {'display': 'block'}, {'display': 'block'}
+    return {'display': 'none'}, {'display': 'none'}
+
+
+@callback(
+    Output('schedule-store-year', 'data'),
+    Output('schedule-pill-year-display', 'children'),
+    Output('schedule-year-pill-dropdown', 'style', allow_duplicate=True),
+    Output('schedule-year-overlay', 'style', allow_duplicate=True),
+    Input({'type': 'schedule-year-pill', 'index': ALL}, 'n_clicks'),
+    State({'type': 'schedule-year-pill', 'index': ALL}, 'id'),
+    prevent_initial_call=True,
+)
+def select_schedule_year(n_clicks, ids):
+    from dash import ctx
+    triggered = ctx.triggered_id
+    if not triggered:
+        return 2025, '2025', {'display': 'none'}, {'display': 'none'}
+    selected = triggered['index']
+    return selected, str(selected), {'display': 'none'}, {'display': 'none'}
+
+
+@callback(
+    Output('schedule-year-pill-dropdown', 'style', allow_duplicate=True),
+    Output('schedule-year-overlay', 'style', allow_duplicate=True),
+    Input('schedule-year-overlay', 'n_clicks'),
+    prevent_initial_call=True,
+)
+def close_schedule_dropdown(n_clicks):
+    return {'display': 'none'}, {'display': 'none'}
+
+
+@callback(
+    Output('schedule-cards', 'children'),
+    Input('schedule-store-year', 'data'),
+)
+def update_schedule(year):
+    from app.pages.schedule import make_race_card
+    try:
+        schedule = fastf1.get_event_schedule(year, include_testing=False)
+        schedule = schedule[schedule['EventFormat'] != 'testing']
+        cards = []
+        for _, event in schedule.iterrows():
+            session_types = [
+                event.get('Session1', ''),
+                event.get('Session2', ''),
+                event.get('Session3', ''),
+                event.get('Session4', ''),
+                event.get('Session5', ''),
+            ]
+            card = make_race_card(
+                round_num=event['RoundNumber'],
+                event_name=event['EventName'],
+                country=event['Country'],
+                date_start=event['Session1Date'],
+                date_end=event['Session5Date'],
+                session_types=session_types,
+                year=year,
+            )
+            cards.append(card)
+        return cards
+    except Exception as e:
+        print(f'Schedule error: {e}')
+        return [html.Div(f'Error loading schedule: {e}')]
+
+@callback(
+    Output('store-page', 'data', allow_duplicate=True),
+    Output('page-content', 'children', allow_duplicate=True),
+    Input({'type': 'race-card', 'year': ALL, 'event': ALL}, 'n_clicks'),
+    State({'type': 'race-card', 'year': ALL, 'event': ALL}, 'id'),
+    prevent_initial_call=True,
+)
+def race_card_click(n_clicks, ids):
+    from dash import ctx
+    from app.pages import races
+    triggered = ctx.triggered_id
+    if not triggered or not any(n for n in n_clicks if n):
+        return no_update, no_update
+    return 'races', races.layout()
