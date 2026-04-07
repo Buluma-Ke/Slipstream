@@ -727,3 +727,177 @@ def race_card_click(n_clicks, ids):
     if not triggered or not any(n for n in n_clicks if n):
         return no_update, no_update
     return 'races', races.layout()
+
+
+
+# ── Standings page ────────────────────────────────────────────────────────────
+@callback(
+    Output('standings-year-pill-dropdown', 'style', allow_duplicate=True),
+    Output('standings-year-overlay', 'style', allow_duplicate=True),
+    Input('standings-year-pill-toggle', 'n_clicks'),
+    State('standings-year-pill-dropdown', 'style'),
+    prevent_initial_call=True,
+)
+def toggle_standings_year(n_clicks, current_style):
+    if isinstance(current_style, dict) and current_style.get('display') == 'none':
+        return {'display': 'block'}, {'display': 'block'}
+    return {'display': 'none'}, {'display': 'none'}
+
+
+@callback(
+    Output('standings-store-year', 'data'),
+    Output('standings-pill-year-display', 'children'),
+    Output('standings-year-pill-dropdown', 'style', allow_duplicate=True),
+    Output('standings-year-overlay', 'style', allow_duplicate=True),
+    Input({'type': 'standings-year-pill', 'index': ALL}, 'n_clicks'),
+    State({'type': 'standings-year-pill', 'index': ALL}, 'id'),
+    prevent_initial_call=True,
+)
+def select_standings_year(n_clicks, ids):
+    from dash import ctx
+    triggered = ctx.triggered_id
+    if not triggered:
+        return 2025, '2025', {'display': 'none'}, {'display': 'none'}
+    selected = triggered['index']
+    return selected, str(selected), {'display': 'none'}, {'display': 'none'}
+
+
+@callback(
+    Output('standings-year-pill-dropdown', 'style', allow_duplicate=True),
+    Output('standings-year-overlay', 'style', allow_duplicate=True),
+    Input('standings-year-overlay', 'n_clicks'),
+    prevent_initial_call=True,
+)
+def close_standings_dropdown(n_clicks):
+    return {'display': 'none'}, {'display': 'none'}
+
+
+@callback(
+    Output('standings-drivers-content', 'children'),
+    Output('standings-constructors-content', 'children'),
+    Input('standings-store-year', 'data'),
+)
+def update_standings(year):
+    import fastf1
+    import pandas as pd
+    try:
+        schedule = fastf1.get_event_schedule(year, include_testing=False)
+        races = schedule[schedule['EventFormat'] != 'testing']
+        results_list = []
+
+        for _, event in races.iterrows():
+            try:
+                session = fastf1.get_session(year, event['RoundNumber'], 'R')
+                session.load(telemetry=False, weather=False, messages=False)
+                res = session.results
+                if res is None or len(res) == 0:
+                    continue
+                res = res.copy()
+                res['EventName'] = event['EventName']
+                res['RoundNumber'] = event['RoundNumber']
+                results_list.append(res)
+            except Exception:
+                continue
+
+        if not results_list:
+            return html.Div('No data', className='standings-empty'), \
+                   html.Div('No data', className='standings-empty')
+
+        all_results = pd.concat(results_list, ignore_index=True)
+
+        # ── Drivers ──
+        driver_standings = all_results.groupby(
+            ['Abbreviation', 'FullName', 'TeamName']
+        )['Points'].sum().reset_index().sort_values('Points', ascending=False)
+        driver_standings['Pos'] = range(1, len(driver_standings) + 1)
+
+        # Count wins per driver
+        wins = all_results[all_results['Position'] == 1]\
+            .groupby('Abbreviation').size()
+
+        driver_rows = []
+        for _, row in driver_standings.iterrows():
+            team_color = TEAM_COLORS.get(row['TeamName'], '#444')
+            logo_file = TEAM_LOGOS.get(row['TeamName'], None)
+            pos = int(row['Pos'])
+            w = wins.get(row['Abbreviation'], 0)
+            driver_rows.append(
+                html.Tr([
+                    html.Td(str(pos), className='pos'),
+                    html.Td(
+                        html.Img(
+                            src=f'/assets/logos/{logo_file}.avif',
+                            style={'height': '16px', 'width': '28px',
+                                   'objectFit': 'contain'},
+                        ) if logo_file else html.Div(
+                            style={'width': '4px', 'background': team_color}),
+                        style={'width': '36px', 'padding': '0 4px'},
+                    ),
+                    html.Td(row['Abbreviation'], className='driver-abbr'),
+                    html.Td(row['FullName'], className='driver-name'),
+                    html.Td(str(int(w)), className='driver-name',
+                            style={'textAlign': 'center'}),
+                    html.Td(f"{int(row['Points'])}", className='pts'),
+                ], className='p1' if pos == 1 else '')
+            )
+
+        drivers_table = html.Table([
+            html.Thead(html.Tr([
+                html.Th('POS'), html.Th(''),
+                html.Th('DRV'), html.Th('NAME'),
+                html.Th('WINS', style={'textAlign': 'center'}),
+                html.Th('PTS'),
+            ])),
+            html.Tbody(driver_rows),
+        ], className='champ-table standings-full-table')
+
+        # ── Constructors ──
+        constructor_standings = all_results.groupby(
+            'TeamName'
+        )['Points'].sum().reset_index().sort_values('Points', ascending=False)
+        constructor_standings['Pos'] = range(1, len(constructor_standings) + 1)
+
+        con_wins = all_results[all_results['Position'] == 1]\
+            .groupby('TeamName').size()
+
+        constructor_rows = []
+        for _, row in constructor_standings.iterrows():
+            team_color = TEAM_COLORS.get(row['TeamName'], '#444')
+            logo_file = TEAM_LOGOS.get(row['TeamName'], None)
+            pos = int(row['Pos'])
+            w = con_wins.get(row['TeamName'], 0)
+            constructor_rows.append(
+                html.Tr([
+                    html.Td(str(pos), className='pos'),
+                    html.Td(
+                        html.Img(
+                            src=f'/assets/logos/{logo_file}.avif',
+                            style={'height': '16px', 'width': '28px',
+                                   'objectFit': 'contain'},
+                        ) if logo_file else html.Div(
+                            style={'width': '4px', 'background': team_color}),
+                        style={'width': '36px', 'padding': '0 4px'},
+                    ),
+                    html.Td(row['TeamName']),
+                    html.Td(str(int(w)), className='driver-name',
+                            style={'textAlign': 'center'}),
+                    html.Td(f"{int(row['Points'])}", className='pts'),
+                ], className='p1' if pos == 1 else '')
+            )
+
+        constructors_table = html.Table([
+            html.Thead(html.Tr([
+                html.Th('POS'), html.Th(''),
+                html.Th('TEAM'),
+                html.Th('WINS', style={'textAlign': 'center'}),
+                html.Th('PTS'),
+            ])),
+            html.Tbody(constructor_rows),
+        ], className='champ-table standings-full-table')
+
+        return drivers_table, constructors_table
+
+    except Exception as e:
+        print(f'Standings error: {e}')
+        err = html.Div(f'Error: {e}', className='standings-empty')
+        return err, err

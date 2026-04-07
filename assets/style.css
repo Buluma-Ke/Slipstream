@@ -831,3 +831,45 @@ body::before {
     align-items: center;
     justify-content: center;
 }
+
+
+/* ── Standings page ── */
+.standings-tabs {
+    margin-top: 8px;
+}
+
+.standings-tab {
+    font-family: 'Titillium Web', sans-serif !important;
+    font-size: 0.72rem !important;
+    font-weight: 600 !important;
+    letter-spacing: 0.15em !important;
+    text-transform: uppercase !important;
+    color: #444 !important;
+    border: none !important;
+    border-bottom: 2px solid transparent !important;
+    background: transparent !important;
+    padding: 6px 16px !important;
+}
+
+.standings-tab-active {
+    color: var(--pearl) !important;
+    border-bottom: 2px solid var(--red) !important;
+    background: transparent !important;
+}
+
+.standings-table-wrapper {
+    padding: 12px 0;
+    overflow-y: auto;
+    max-height: calc(100vh - 160px);
+}
+
+.standings-full-table {
+    width: 100%;
+}
+
+.standings-empty {
+    color: #555;
+    font-size: 0.8rem;
+    padding: 20px;
+    font-family: 'Titillium Web', sans-serif;
+}
