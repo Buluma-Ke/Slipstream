@@ -31,5 +31,11 @@ def layout():
         ], className='home-top-row'),
 
         html.Div(id='drv-standings-content', className='standings-table-wrapper'),
+        dcc.Graph(id='drv-points-evolution', config={'displayModeBar': False},
+                style={'height': '400px', 'marginTop': '16px'}),
+        dcc.Graph(id='drv-ranking-evolution', config={'displayModeBar': False},
+                style={'height': '500px', 'marginTop': '16px'}),
+        dcc.Graph(id='drv-stats-chart', config={'displayModeBar': False},
+                style={'height': '400px', 'marginTop': '16px'}),
 
     ], className='home-wrapper')
