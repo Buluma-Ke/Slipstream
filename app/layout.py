@@ -11,6 +11,8 @@ def build_layout():
         dcc.Store(id='home-store-year', data=2025),
         dcc.Store(id='schedule-store-year', data=2025),
         dcc.Store(id='standings-store-year', data=2025),
+        dcc.Store(id='drv-standings-store-year', data=2025),
+        dcc.Store(id='con-standings-store-year', data=2025),
 
         # Sidebar
         build_sidebar(),

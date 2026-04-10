@@ -2,16 +2,16 @@ from dash import html
 from dash_iconify import DashIconify
 
 NAV_ITEMS = [
-    ('home',        'tabler:layout-2',        'Home'),
-    ('schedule',    'tabler:calendar-event',   'Schedule'),
-    ('standings',   'tabler:trophy',           'Standings'),
-    ('races',       'tabler:steering-wheel',   'Races'),
-    ('drivers',     'tabler:helmet',           'Drivers'),
-    ('teams',       'tabler:users-group',      'Teams'),
-    ('telemetry',   'tabler:activity',         'Telemetry'),
-    ('predictions', 'tabler:chart-dots',       'Predictions'),
+    ('home',                     'tabler:layout-2',         'Home'),
+    ('schedule',                 'tabler:calendar-event',   'Schedule'),
+    ('driver-standings',         'tabler:trophy',           'Driver Standings'),
+    ('constructor-standings',    'tabler:building-factory', 'Constructor Standings'),
+    ('races',                    'tabler:steering-wheel',   'Races'),
+    ('drivers',                  'tabler:helmet',           'Drivers'),
+    ('teams',                    'tabler:users-group',      'Teams'),
+    ('telemetry',                'tabler:activity',         'Telemetry'),
+    ('predictions',              'tabler:chart-dots',       'Predictions'),
 ]
-
 
 def build_sidebar():
     nav_links = []
