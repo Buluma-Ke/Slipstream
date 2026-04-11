@@ -256,31 +256,31 @@ def make_lap_delta(laps, driver_a, driver_b):
     return fig
 
 
-if __name__ == '__main__':
-    import sys
-    sys.path.insert(0, '.')
-    from data.store import query_laps
-    from data.loader import get_session
+# if __name__ == '__main__':
+#     import sys
+#     sys.path.insert(0, '.')
+#     from data.store import query_laps
+#     from data.loader import get_session
 
-    laps = query_laps(year=2023, event_name='Bahrain Grand Prix', session_type='R')
-    session = get_session(2023, 'Bahrain', 'R')
-    ver_lap = session.laps.pick_driver('VER').pick_lap(10)
+#     laps = query_laps(year=2023, event_name='Bahrain Grand Prix', session_type='R')
+#     session = get_session(2023, 'Bahrain', 'R')
+#     ver_lap = session.laps.pick_driver('VER').pick_lap(10)
 
-    tel = ver_lap.get_car_data().add_distance()
-    pos = ver_lap.get_pos_data()
-    merged = tel.merge_channels(pos)
+#     tel = ver_lap.get_car_data().add_distance()
+#     pos = ver_lap.get_pos_data()
+#     merged = tel.merge_channels(pos)
 
-    fig1 = make_lap_time_dist(laps)
-    fig1.show()
+#     fig1 = make_lap_time_dist(laps)
+#     fig1.show()
 
-    fig2 = make_speed_trace(tel, 'VER — Lap 10')
-    fig2.show()
+#     fig2 = make_speed_trace(tel, 'VER — Lap 10')
+#     fig2.show()
 
-    fig3 = make_track_map(merged)
-    fig3.show()
+#     fig3 = make_track_map(merged)
+#     fig3.show()
 
-    fig4 = make_strategy_strip(laps)
-    fig4.show()
+#     fig4 = make_strategy_strip(laps)
+#     fig4.show()
 
-    fig5 = make_lap_delta(laps, 'VER', 'PER')
-    fig5.show()
+#     fig5 = make_lap_delta(laps, 'VER', 'PER')
+#     fig5.show()

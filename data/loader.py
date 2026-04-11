@@ -8,8 +8,10 @@ fastf1.Cache.enable_cache(str(CACHE_DIR))
 
 
 def get_session(year, event, session_type="R"):
+    # Fetch -> load -> return
     session = fastf1.get_session(year, event, session_type)
     session.load()
+
     return session
 
 

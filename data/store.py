@@ -15,10 +15,6 @@ def init_db():
     """
     Create the core tables if they don't exist.
     Run this once before using any other function.
-
-    Tables created:
-        laps            — one row per lap per driver per session
-        sessions_loaded — tracks which sessions have been persisted
     """
     con = get_connection()
     con.execute("""
@@ -80,6 +76,7 @@ def save_laps(laps, year, event_name, session_type):
 
     # Build a clean DataFrame to insert
     import pandas as pd
+
     insert_df = pd.DataFrame({
         'year': year,
         'event_name': event_name,
@@ -148,29 +145,29 @@ def query_laps(year=None, event_name=None, session_type=None, driver=None):
 
 
 
-if __name__ == "__main__":
-    con = get_connection()
+# if __name__ == "__main__":
+#     con = get_connection()
 
-    print("\n--- Sessions stored ---")
-    print(con.execute("SELECT * FROM sessions_loaded").df())
+#     print("\n--- Sessions stored ---")
+#     print(con.execute("SELECT * FROM sessions_loaded").df())
 
-    print("\n--- Total laps ---")
-    print(con.execute("SELECT COUNT(*) as total_laps FROM laps").df())
+#     print("\n--- Total laps ---")
+#     print(con.execute("SELECT COUNT(*) as total_laps FROM laps").df())
 
-    print("\n--- Avg pace per driver ---")
-    print(con.execute("""
-        SELECT driver, COUNT(*) as laps, ROUND(AVG(lap_time_sec), 3) as avg_lap
-        FROM laps
-        GROUP BY driver
-        ORDER BY avg_lap
-    """).df().to_string())
+#     print("\n--- Avg pace per driver ---")
+#     print(con.execute("""
+#         SELECT driver, COUNT(*) as laps, ROUND(AVG(lap_time_sec), 3) as avg_lap
+#         FROM laps
+#         GROUP BY driver
+#         ORDER BY avg_lap
+#     """).df().to_string())
 
-    print("\n--- Compound breakdown ---")
-    print(con.execute("""
-        SELECT compound, COUNT(*) as laps, ROUND(AVG(lap_time_sec), 3) as avg_lap
-        FROM laps
-        GROUP BY compound
-        ORDER BY avg_lap
-    """).df().to_string())
+#     print("\n--- Compound breakdown ---")
+#     print(con.execute("""
+#         SELECT compound, COUNT(*) as laps, ROUND(AVG(lap_time_sec), 3) as avg_lap
+#         FROM laps
+#         GROUP BY compound
+#         ORDER BY avg_lap
+#     """).df().to_string())
 
-    con.close()
+#     con.close()
