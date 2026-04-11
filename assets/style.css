@@ -860,7 +860,6 @@ body::before {
 .standings-table-wrapper {
     padding: 12px 0;
     overflow-y: auto;
-    max-height: calc(100vh - 160px);
 }
 
 .standings-full-table {
@@ -872,4 +871,42 @@ body::before {
     font-size: 0.8rem;
     padding: 20px;
     font-family: 'Titillium Web', sans-serif;
+}
+
+
+
+/* ── Driver standings layout ── */
+.drv-standings-layout {
+    display: flex;
+    gap: 12px;
+    height: calc(100vh - 120px);
+    overflow-y: auto;
+    overflow-x: hidden;
+}
+
+.drv-standings-layout::-webkit-scrollbar { width: 3px; }
+.drv-standings-layout::-webkit-scrollbar-track { background: transparent; }
+.drv-standings-layout::-webkit-scrollbar-thumb { 
+    background: rgba(91,136,178,0.2);
+    border-radius: 2px;
+}
+
+.drv-left {
+    width: 340px;
+    flex-shrink: 0;
+}
+
+.drv-right {
+    flex: 1;
+    min-width: 0;
+}
+
+@media (max-width: 900px) {
+    .drv-standings-layout {
+        flex-direction: column;
+        height: auto;
+    }
+    .drv-left {
+        width: 100%;
+    }
 }

@@ -34,9 +34,8 @@ def layout():
         html.Div([
             # Left — standings table
             html.Div(
-                html.Div(id='drv-standings-content', className='standings-table-wrapper'),
-                style={'width': '340px', 'flexShrink': '0', 'overflowY': 'auto',
-                    'height': 'calc(100vh - 120px)'},
+                html.Div(id='drv-standings-content'),
+                className='drv-left',
             ),
 
             # Right — charts stacked
@@ -50,9 +49,7 @@ def layout():
                 dcc.Graph(id='drv-stats-chart',
                         config={'displayModeBar': False},
                         style={'height': '380px'}),
-            ], style={'flex': '1', 'overflowY': 'auto',
-                    'height': 'calc(100vh - 120px)', 'paddingLeft': '12px'}),
-
-        ], style={'display': 'flex', 'gap': '12px', 'overflow': 'hidden'}),
+            ], className='drv-right'),
+        ], className='drv-standings-layout'),
 
     ], className='home-wrapper')
