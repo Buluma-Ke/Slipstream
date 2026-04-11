@@ -30,12 +30,29 @@ def layout():
                       'alignItems': 'center', 'gap': '8px'}),
         ], className='home-top-row'),
 
-        html.Div(id='drv-standings-content', className='standings-table-wrapper'),
-        dcc.Graph(id='drv-points-evolution', config={'displayModeBar': False},
-                style={'height': '400px', 'marginTop': '16px'}),
-        dcc.Graph(id='drv-ranking-evolution', config={'displayModeBar': False},
-                style={'height': '500px', 'marginTop': '16px'}),
-        dcc.Graph(id='drv-stats-chart', config={'displayModeBar': False},
-                style={'height': '400px', 'marginTop': '16px'}),
+        # Two column layout
+        html.Div([
+            # Left — standings table
+            html.Div(
+                html.Div(id='drv-standings-content', className='standings-table-wrapper'),
+                style={'width': '340px', 'flexShrink': '0', 'overflowY': 'auto',
+                    'height': 'calc(100vh - 120px)'},
+            ),
+
+            # Right — charts stacked
+            html.Div([
+                dcc.Graph(id='drv-points-evolution',
+                        config={'displayModeBar': False},
+                        style={'height': '380px', 'marginBottom': '8px'}),
+                dcc.Graph(id='drv-ranking-evolution',
+                        config={'displayModeBar': False},
+                        style={'height': '500px', 'marginBottom': '8px'}),
+                dcc.Graph(id='drv-stats-chart',
+                        config={'displayModeBar': False},
+                        style={'height': '380px'}),
+            ], style={'flex': '1', 'overflowY': 'auto',
+                    'height': 'calc(100vh - 120px)', 'paddingLeft': '12px'}),
+
+        ], style={'display': 'flex', 'gap': '12px', 'overflow': 'hidden'}),
 
     ], className='home-wrapper')
