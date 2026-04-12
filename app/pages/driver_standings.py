@@ -32,24 +32,27 @@ def layout():
 
         # Two column layout
         html.Div([
-            # Left — standings table
-            html.Div(
-                html.Div(id='drv-standings-content'),
-                className='drv-left',
-            ),
+            dcc.Store(id='drv-standings-data'),
+                # Left — standings table
+                html.Div(
+                    html.Div(id='drv-standings-content'),
+                    className='drv-left',
+                ),
 
-            # Right — charts stacked
-            html.Div([
-                dcc.Graph(id='drv-points-evolution',
-                        config={'displayModeBar': False},
-                        style={'height': '380px', 'marginBottom': '8px'}),
-                dcc.Graph(id='drv-ranking-evolution',
-                        config={'displayModeBar': False},
-                        style={'height': '500px', 'marginBottom': '8px'}),
-                dcc.Graph(id='drv-stats-chart',
-                        config={'displayModeBar': False},
-                        style={'height': '380px'}),
-            ], className='drv-right'),
+                # Right — charts stacked
+                dcc.Loading(type='circle', color='#E8002D', children=[
+                html.Div([
+                    dcc.Graph(id='drv-points-evolution',
+                            config={'displayModeBar': False},
+                            style={'height': '400px', 'marginBottom': '8px'}),
+                    dcc.Graph(id='drv-ranking-evolution',
+                            config={'displayModeBar': False},
+                            style={'height': '500px', 'marginBottom': '8px'}),
+                    dcc.Graph(id='drv-stats-chart',
+                            config={'displayModeBar': False},
+                            style={'height': '500px'}),
+                ], className='drv-right'),
+            ])
         ], className='drv-standings-layout'),
 
     ], className='home-wrapper')

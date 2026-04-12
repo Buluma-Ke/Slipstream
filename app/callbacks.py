@@ -776,14 +776,33 @@ def close_drv_standings_dropdown(n_clicks):
 
 @callback(
     Output('drv-standings-content', 'children'),
+    Output('drv-points-evolution', 'figure'),
+    Output('drv-ranking-evolution', 'figure'),
+    Output('drv-stats-chart', 'figure'),
     Input('drv-standings-store-year', 'data'),
 )
-def update_driver_standings(year):
+def update_driver_standings_all(year):
     import fastf1
     import pandas as pd
+    import plotly.graph_objects as go
+
+    TRANSPARENT = dict(
+        plot_bgcolor='rgba(0,0,0,0)',
+        paper_bgcolor='rgba(0,0,0,0)',
+        font=dict(color='#FBF9E4', family='Titillium Web'),
+    )
+    AXIS = dict(
+        gridcolor='rgba(0,0,0,0)',
+        title='',
+        showline=False,
+        zeroline=False,
+        tickfont=dict(color='#444'),
+    )
+    empty = go.Figure().update_layout(**TRANSPARENT)
+
     try:
         schedule = fastf1.get_event_schedule(year, include_testing=False)
-        races = schedule[schedule['EventFormat'] != 'testing']
+        races = schedule[schedule['EventFormat'] != 'testing'].reset_index(drop=True)
         results_list = []
 
         for _, event in races.iterrows():
@@ -795,20 +814,23 @@ def update_driver_standings(year):
                     continue
                 res = res.copy()
                 res['RoundNumber'] = event['RoundNumber']
+                res['EventName'] = event['EventName']
                 results_list.append(res)
             except Exception:
                 continue
 
         if not results_list:
-            return html.Div('No data available.', className='standings-empty')
+            err = html.Div('No data.', className='standings-empty')
+            return err, empty, empty, empty
 
         all_results = pd.concat(results_list, ignore_index=True)
+        rounds = sorted(all_results['RoundNumber'].unique())
 
+        # ── Driver standings table ──
         driver_standings = all_results.groupby(
             ['Abbreviation', 'FullName', 'TeamName']
         )['Points'].sum().reset_index().sort_values('Points', ascending=False)
         driver_standings['Pos'] = range(1, len(driver_standings) + 1)
-
         wins = all_results[all_results['Position'] == 1]\
             .groupby('Abbreviation').size()
 
@@ -835,7 +857,7 @@ def update_driver_standings(year):
                 html.Td(f"{int(row['Points'])}", className='pts'),
             ], className='p1' if pos == 1 else ''))
 
-        return html.Table([
+        table = html.Table([
             html.Thead(html.Tr([
                 html.Th('POS'), html.Th(''),
                 html.Th('DRV'), html.Th('NAME'),
@@ -845,10 +867,116 @@ def update_driver_standings(year):
             html.Tbody(rows),
         ], className='champ-table standings-full-table')
 
+        drivers = driver_standings['Abbreviation'].tolist()
+
+        # ── Points evolution ──
+        fig1 = go.Figure()
+        for drv in drivers:
+            drv_data = all_results[all_results['Abbreviation'] == drv]\
+                .sort_values('RoundNumber')
+            team = drv_data.iloc[0]['TeamName'] if len(drv_data) > 0 else ''
+            color = TEAM_COLORS.get(team, '#444')
+            cumpts = drv_data.set_index('RoundNumber')['Points']\
+                .reindex(rounds).fillna(0).cumsum()
+            fig1.add_trace(go.Scatter(
+                x=list(cumpts.index), y=list(cumpts.values),
+                name=drv, line=dict(color=color, width=1.5),
+                mode='lines+markers', marker=dict(size=4),
+            ))
+        fig1.update_layout(
+            **TRANSPARENT,
+            title='Driver Standings Evolution',
+            xaxis=dict(**AXIS, tickvals=rounds),
+            yaxis=AXIS,
+            showlegend=False,
+            margin=dict(l=40, r=40, t=40, b=20),
+        )
+
+        # ── Ranking evolution ──
+        fig2 = go.Figure()
+        for drv in drivers:
+            drv_data = all_results[all_results['Abbreviation'] == drv]
+            team = drv_data.iloc[0]['TeamName'] if len(drv_data) > 0 else ''
+            color = TEAM_COLORS.get(team, '#444')
+            rankings = []
+            for r in rounds:
+                up_to = all_results[all_results['RoundNumber'] <= r]
+                pts = up_to.groupby('Abbreviation')['Points'].sum()\
+                    .sort_values(ascending=False)
+                rank = list(pts.index).index(drv) + 1 \
+                    if drv in pts.index else None
+                rankings.append(rank)
+            fig2.add_trace(go.Scatter(
+                x=rounds, y=rankings,
+                name=drv, line=dict(color=color, width=1.5),
+                mode='lines+markers', marker=dict(size=4),
+            ))
+            # Driver label on right
+            final_rank = rankings[-1] if rankings else None
+            if final_rank:
+                fig2.add_annotation(
+                    x=rounds[-1], y=final_rank, text=drv,
+                    xanchor='left', showarrow=False,
+                    font=dict(color=color, size=10,
+                              family='Titillium Web'),
+                    xshift=8,
+                )
+        fig2.update_layout(
+            **TRANSPARENT,
+            title='Driver Ranking Evolution',
+            xaxis=dict(**AXIS, tickvals=rounds),
+            yaxis=dict(**AXIS, autorange='reversed', dtick=1),
+            showlegend=False,
+            margin=dict(l=40, r=80, t=40, b=20),
+        )
+
+        # ── Stats ──
+        podiums = all_results[all_results['Position'] <= 3]\
+            .groupby('Abbreviation').size()
+        points_finishes = all_results[all_results['Points'] > 0]\
+            .groupby('Abbreviation').size()
+        dnfs = all_results[all_results['Status'].str.contains(
+            'DNF|Retired|Accident|Engine|Mechanical',
+            case=False, na=False)].groupby('Abbreviation').size()
+
+        fig3 = go.Figure()
+        fig3.add_trace(go.Bar(
+            name='Wins', x=drivers,
+            y=[wins.get(d, 0) for d in drivers],
+            marker_color='#c9a84c',
+        ))
+        fig3.add_trace(go.Bar(
+            name='Podiums', x=drivers,
+            y=[podiums.get(d, 0) for d in drivers],
+            marker_color='#5B88B2',
+        ))
+        fig3.add_trace(go.Bar(
+            name='Points finishes', x=drivers,
+            y=[points_finishes.get(d, 0) for d in drivers],
+            marker_color='#555',
+        ))
+        fig3.add_trace(go.Bar(
+            name='DNFs', x=drivers,
+            y=[-dnfs.get(d, 0) for d in drivers],
+            marker_color='#E8002D',
+        ))
+        fig3.update_layout(
+            **TRANSPARENT,
+            title='Stats',
+            barmode='group',
+            xaxis=AXIS,
+            yaxis=AXIS,
+            legend=dict(bgcolor='rgba(0,0,0,0)',
+                        font=dict(color='#888', size=10)),
+            margin=dict(l=40, r=40, t=40, b=20),
+        )
+
+        return table, fig1, fig2, fig3
+
     except Exception as e:
         print(f'Driver standings error: {e}')
-        return html.Div(f'Error: {e}', className='standings-empty')
-
+        err = html.Div(f'Error: {e}', className='standings-empty')
+        return err, empty, empty, empty
 
 
 # ── Constructor standings page ────────────────────────────────────────────────
@@ -967,164 +1095,3 @@ def update_constructor_standings(year):
         return html.Div(f'Error: {e}', className='standings-empty')
 
 
-@callback(
-    Output('drv-points-evolution', 'figure'),
-    Output('drv-ranking-evolution', 'figure'),
-    Output('drv-stats-chart', 'figure'),
-    Input('drv-standings-store-year', 'data'),
-)
-def update_drv_charts(year):
-    import fastf1
-    import pandas as pd
-    import plotly.graph_objects as go
-    import plotly.express as px
-
-    TRANSPARENT = dict(
-        plot_bgcolor='rgba(0,0,0,0)',
-        paper_bgcolor='rgba(0,0,0,0)',
-        font=dict(color='#FBF9E4', family='Titillium Web'),
-    )
-
-    try:
-        schedule = fastf1.get_event_schedule(year, include_testing=False)
-        races = schedule[schedule['EventFormat'] != 'testing'].reset_index(drop=True)
-        results_list = []
-
-        for _, event in races.iterrows():
-            try:
-                session = fastf1.get_session(year, event['RoundNumber'], 'R')
-                session.load(telemetry=False, weather=False, messages=False)
-                res = session.results
-                if res is None or len(res) == 0:
-                    continue
-                res = res.copy()
-                res['RoundNumber'] = event['RoundNumber']
-                res['EventName'] = event['EventName']
-                results_list.append(res)
-            except Exception:
-                continue
-
-        if not results_list:
-            empty = go.Figure().update_layout(**TRANSPARENT)
-            return empty, empty, empty
-
-        all_results = pd.concat(results_list, ignore_index=True)
-        rounds = sorted(all_results['RoundNumber'].unique())
-        drivers = all_results.groupby('Abbreviation')['Points']\
-            .sum().sort_values(ascending=False).index.tolist()
-
-        # ── Points evolution ──
-        fig1 = go.Figure()
-        for drv in drivers:
-            drv_data = all_results[all_results['Abbreviation'] == drv]\
-                .sort_values('RoundNumber')
-            team = drv_data.iloc[0]['TeamName'] if len(drv_data) > 0 else ''
-            color = TEAM_COLORS.get(team, '#444')
-            cumpts = drv_data.set_index('RoundNumber')['Points']\
-                .reindex(rounds).fillna(0).cumsum()
-            fig1.add_trace(go.Scatter(
-                x=list(cumpts.index), y=list(cumpts.values),
-                name=drv, line=dict(color=color, width=1.5),
-                mode='lines+markers', marker=dict(size=4),
-            ))
-        fig1.update_layout(
-            **TRANSPARENT,
-            title='Driver Standings Evolution',
-            xaxis=dict(title='Round', gridcolor='#1a1a1a', tickvals=rounds),
-            yaxis=dict(title='Points', gridcolor='#1a1a1a'),
-            showlegend=True,
-            legend=dict(bgcolor='rgba(0,0,0,0)', font=dict(size=10)),
-        )
-
-        # ── Ranking evolution ──
-        fig2 = go.Figure()
-        for drv in drivers:
-            drv_data = all_results[all_results['Abbreviation'] == drv]\
-                .sort_values('RoundNumber')
-            team = drv_data.iloc[0]['TeamName'] if len(drv_data) > 0 else ''
-            color = TEAM_COLORS.get(team, '#444')
-            rankings = []
-            for r in rounds:
-                up_to = all_results[all_results['RoundNumber'] <= r]
-                pts = up_to.groupby('Abbreviation')['Points'].sum()\
-                    .sort_values(ascending=False)
-                rank = list(pts.index).index(drv) + 1 if drv in pts.index else None
-                rankings.append(rank)
-            fig2.add_trace(go.Scatter(
-                x=rounds, y=rankings,
-                name=drv, line=dict(color=color, width=1.5),
-                mode='lines+markers', marker=dict(size=4),
-                text=[drv] * len(rounds),
-            ))
-        fig2.update_layout(
-            **TRANSPARENT,
-            title='Driver Ranking Evolution',
-            xaxis=dict(title='Round', gridcolor='#1a1a1a', tickvals=rounds),
-            yaxis=dict(title='Position', autorange='reversed',
-                       gridcolor='#1a1a1a', dtick=1),
-            showlegend=False,
-        )
-        # Add driver labels on right
-        for drv in drivers:
-            drv_data = all_results[all_results['Abbreviation'] == drv]
-            team = drv_data.iloc[0]['TeamName'] if len(drv_data) > 0 else ''
-            color = TEAM_COLORS.get(team, '#444')
-            up_to = all_results
-            pts = up_to.groupby('Abbreviation')['Points'].sum()\
-                .sort_values(ascending=False)
-            rank = list(pts.index).index(drv) + 1 if drv in pts.index else None
-            fig2.add_annotation(
-                x=rounds[-1], y=rank, text=drv,
-                xanchor='left', showarrow=False,
-                font=dict(color=color, size=10, family='Titillium Web'),
-                xshift=8,
-            )
-
-        # ── Stats chart ──
-        wins = all_results[all_results['Position'] == 1]\
-            .groupby('Abbreviation').size()
-        podiums = all_results[all_results['Position'] <= 3]\
-            .groupby('Abbreviation').size()
-        points_finishes = all_results[all_results['Points'] > 0]\
-            .groupby('Abbreviation').size()
-        dnfs = all_results[all_results['Status'].str.contains(
-            'DNF|Retired|Accident|Engine|Mechanical', case=False, na=False)]\
-            .groupby('Abbreviation').size()
-
-        drv_order = drivers
-        fig3 = go.Figure()
-        fig3.add_trace(go.Bar(
-            name='Wins', x=drv_order,
-            y=[wins.get(d, 0) for d in drv_order],
-            marker_color='#c9a84c',
-        ))
-        fig3.add_trace(go.Bar(
-            name='Podiums', x=drv_order,
-            y=[podiums.get(d, 0) for d in drv_order],
-            marker_color='#5B88B2',
-        ))
-        fig3.add_trace(go.Bar(
-            name='Points finishes', x=drv_order,
-            y=[points_finishes.get(d, 0) for d in drv_order],
-            marker_color='#888',
-        ))
-        fig3.add_trace(go.Bar(
-            name='DNFs', x=drv_order,
-            y=[-dnfs.get(d, 0) for d in drv_order],
-            marker_color='#E8002D',
-        ))
-        fig3.update_layout(
-            **TRANSPARENT,
-            title='Stats',
-            barmode='group',
-            xaxis=dict(gridcolor='#1a1a1a'),
-            yaxis=dict(gridcolor='#1a1a1a'),
-            legend=dict(bgcolor='rgba(0,0,0,0)'),
-        )
-
-        return fig1, fig2, fig3
-
-    except Exception as e:
-        print(f'Driver charts error: {e}')
-        empty = go.Figure().update_layout(**TRANSPARENT)
-        return empty, empty, empty

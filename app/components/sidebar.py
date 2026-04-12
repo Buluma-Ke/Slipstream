@@ -5,7 +5,7 @@ NAV_ITEMS = [
     ('home',                     'tabler:layout-2',         'Home'),
     ('schedule',                 'tabler:calendar-event',   'Schedule'),
     ('driver-standings',         'tabler:trophy',           'Driver Standings'),
-    ('constructor-standings',    'tabler:building-factory', 'Constructor Standings'),
+    ('constructor-standings',    'tabler:building-factory', 'Constructor'),
     ('races',                    'tabler:steering-wheel',   'Races'),
     ('drivers',                  'tabler:helmet',           'Drivers'),
     ('teams',                    'tabler:users-group',      'Teams'),
