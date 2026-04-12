@@ -4,6 +4,7 @@ from data.loader import get_session, get_laps
 from data.store import save_laps, query_laps
 import fastf1
 
+
 TEAM_COLORS = {
     'Red Bull Racing': '#3671C6',
     'Ferrari': '#E8002D',
