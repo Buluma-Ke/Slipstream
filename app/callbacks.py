@@ -930,7 +930,7 @@ def update_driver_standings_all(year):
             autosize=True,
             title=dict(text='Driver Ranking Evolution', font=dict(color='#444', size=13)),
             xaxis=dict(**AXIS, tickvals=rounds),
-            yaxis=dict(**AXIS, autorange='reversed', dtick=1),
+            yaxis=dict(**AXIS, autorange='reversed', dtick=1, range=[len(drivers)+0.5, 0.5]),
             showlegend=False,
             margin=dict(l=40, r=80, t=40, b=20),
         )
