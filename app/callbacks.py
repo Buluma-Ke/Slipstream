@@ -5,6 +5,7 @@ from data.store import save_laps, query_laps
 import fastf1
 
 
+
 TEAM_COLORS = {
     'Red Bull Racing': '#3671C6',
     'Ferrari': '#E8002D',
@@ -345,6 +346,7 @@ def update_map(driver, lap_number, year, event, session_type):
     except Exception as e:
         print(f'Map error: {e}')
         return {}
+
 
 
 # --- Sidebar toggle ---

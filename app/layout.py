@@ -15,7 +15,7 @@ def build_layout():
         dcc.Store(id='con-standings-store-year', data=2025),
 
         # Sidebar
-        build_sidebar(),
+        build_sidebar(),  
 
         # Main content
         html.Div([
