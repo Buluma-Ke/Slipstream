@@ -860,6 +860,62 @@ def update_driver_standings_all(year):
                 html.Td(f"{int(row['Points'])}", className='pts'),
             ], className='p1' if pos == 1 else ''))
 
+
+        # ── Hero card ──
+        leader = driver_standings.iloc[0]
+        leader_team = leader['TeamName']
+        leader_color = TEAM_COLORS.get(leader_team, '#444')
+        leader_logo = TEAM_LOGOS.get(leader_team, None)
+
+        hero = html.Div([
+            html.Div([
+                html.Div(f'{year} Championship Leader',
+                         style={'fontSize': '0.6rem', 'color': '#888',
+                                'letterSpacing': '0.15em',
+                                'textTransform': 'uppercase',
+                                'fontFamily': 'Titillium Web, sans-serif',
+                                'marginBottom': '8px'}),
+                html.Div(leader['FullName'].split()[-1],
+                         style={'fontFamily': 'Titillium Web, sans-serif',
+                                'fontSize': '2rem', 'fontWeight': '900',
+                                'color': leader_color, 'lineHeight': '1'}),
+                html.Div(f"{int(leader['Points'])} pts",
+                         style={'fontSize': '0.7rem', 'color': '#888',
+                                'fontFamily': 'Titillium Web, sans-serif',
+                                'marginTop': '4px'}),
+            ], style={'flex': '1'}),
+            html.Div(
+                html.Img(src=f'/assets/logos/{leader_logo}.avif',
+                         style={'height': '32px', 'objectFit': 'contain'})
+                if leader_logo else html.Div(),
+                style={'display': 'flex', 'alignItems': 'center'},
+            ),
+        ], style={
+            'display': 'flex',
+            'justifyContent': 'space-between',
+            'alignItems': 'center',
+            'background': f'linear-gradient(135deg, rgba(0,0,0,0.8), {leader_color}22)',
+            'border': f'1px solid {leader_color}44',
+            'borderLeft': f'3px solid {leader_color}',
+            'borderRadius': '6px',
+            'padding': '14px 16px',
+            'marginBottom': '16px',
+        })
+
+        # ── Table ──
+        table = html.Div([
+            hero,
+            html.Table([
+                html.Thead(html.Tr([
+                    html.Th('POS'), html.Th(''),
+                    html.Th('DRV'), html.Th('NAME'),
+                    html.Th('WINS', style={'textAlign': 'center'}),
+                    html.Th('PTS'),
+                ])),
+                html.Tbody(rows),
+            ], className='champ-table standings-full-table'),
+        ])
+
         table = html.Table([
             html.Thead(html.Tr([
                 html.Th('POS'), html.Th(''),

@@ -879,7 +879,7 @@ body::before {
     display: grid;
     grid-template-columns: 340px 1fr;
     gap: 12px;
-    height: calc(100vh - 120px);
+    height: calc(100vh - 80px);
     overflow-y: auto;
     overflow-x: hidden;
 }
@@ -899,7 +899,7 @@ body::before {
 
 .drv-left {
     min-width: 0;
-    overflow-y: auto;
+    overflow-y: visible;
 }
 
 .drv-right {
