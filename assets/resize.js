@@ -1,19 +1,20 @@
-document.addEventListener('DOMContentLoaded', function() {
-    var toggle = document.getElementById('sidebar-toggle');
-    if (toggle) {
-        toggle.addEventListener('click', function() {
-            setTimeout(function() {
-                window.dispatchEvent(new Event('resize'));
-            }, 300);
-        });
+function setupResizeObserver() {
+    var sidebar = document.getElementById('sidebar');
+    if (!sidebar) {
+        setTimeout(setupResizeObserver, 500);
+        return;
     }
 
     var observer = new MutationObserver(function() {
-        window.dispatchEvent(new Event('resize'));
+        setTimeout(function() {
+            window.dispatchEvent(new Event('resize'));
+        }, 300);
     });
 
-    var sidebar = document.getElementById('sidebar');
-    if (sidebar) {
-        observer.observe(sidebar, { attributes: true, attributeFilter: ['class'] });
-    }
-});
+    observer.observe(sidebar, { 
+        attributes: true, 
+        attributeFilter: ['class'] 
+    });
+}
+
+setupResizeObserver();
