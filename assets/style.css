@@ -890,6 +890,12 @@ body::before {
     border-radius: 2px;
 }
 
+.drv-standings-layout .js-plotly-plot,
+.drv-standings-layout .plot-container,
+.drv-standings-layout .svg-container {
+    width: 100% !important;
+}
+
 .drv-left {
     width: 340px;
     flex-shrink: 0;
@@ -908,4 +914,14 @@ body::before {
     .drv-left {
         width: 100%;
     }
+}
+
+.drv-right .js-plotly-plot,
+.drv-right .plot-container {
+    width: 100% !important;
+}
+
+.drv-right > div,
+.drv-right > div > div {
+    width: 100% !important;
 }

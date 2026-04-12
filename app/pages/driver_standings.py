@@ -43,14 +43,14 @@ def layout():
                 dcc.Loading(type='circle', color='#E8002D', children=[
                 html.Div([
                     dcc.Graph(id='drv-points-evolution',
-                            config={'displayModeBar': False},
-                            style={'height': '400px', 'marginBottom': '8px'}),
+                            config={'displayModeBar': False, 'responsive': True},
+                            style={'height': '400px', 'marginBottom': '8px', 'width': '100%'}),
                     dcc.Graph(id='drv-ranking-evolution',
-                            config={'displayModeBar': False},
-                            style={'height': '500px', 'marginBottom': '8px'}),
+                            config={'displayModeBar': False, 'responsive': True},
+                            style={'height': '500px', 'marginBottom': '8px', 'width': '100%'}),
                     dcc.Graph(id='drv-stats-chart',
-                            config={'displayModeBar': False},
-                            style={'height': '500px'}),
+                            config={'displayModeBar': False, 'responsive': True},
+                            style={'height': '500px', 'width': '100%'}),
                 ], className='drv-right'),
             ])
         ], className='drv-standings-layout'),

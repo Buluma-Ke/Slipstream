@@ -885,7 +885,8 @@ def update_driver_standings_all(year):
             ))
         fig1.update_layout(
             **TRANSPARENT,
-            title='Driver Standings Evolution',
+            autosize=True,
+            title=dict(text='Driver Standings Evolution', font=dict(color='#444', size=13)),
             xaxis=dict(**AXIS, tickvals=rounds),
             yaxis=AXIS,
             showlegend=False,
@@ -908,8 +909,8 @@ def update_driver_standings_all(year):
                 rankings.append(rank)
             fig2.add_trace(go.Scatter(
                 x=rounds, y=rankings,
-                name=drv, line=dict(color=color, width=1.5),
-                mode='lines+markers', marker=dict(size=4),
+                name=drv, line=dict(color=color, width=1.5, shape='spline', smoothing=1.3),
+                mode='lines',
             ))
             # Driver label on right
             final_rank = rankings[-1] if rankings else None
@@ -923,7 +924,8 @@ def update_driver_standings_all(year):
                 )
         fig2.update_layout(
             **TRANSPARENT,
-            title='Driver Ranking Evolution',
+            autosize=True,
+            title=dict(text='Driver Ranking Evolution', font=dict(color='#444', size=13)),
             xaxis=dict(**AXIS, tickvals=rounds),
             yaxis=dict(**AXIS, autorange='reversed', dtick=1),
             showlegend=False,
@@ -962,7 +964,8 @@ def update_driver_standings_all(year):
         ))
         fig3.update_layout(
             **TRANSPARENT,
-            title='Stats',
+            autosize=True,
+            title=dict(text='Stats', font=dict(color='#444', size=13)),
             barmode='group',
             xaxis=AXIS,
             yaxis=AXIS,
