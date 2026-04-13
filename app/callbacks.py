@@ -900,6 +900,7 @@ def update_driver_standings_all(year):
             'borderRadius': '6px',
             'padding': '14px 16px',
             'marginBottom': '16px',
+           
         })
 
         # ── Table ──
@@ -915,16 +916,6 @@ def update_driver_standings_all(year):
                 html.Tbody(rows),
             ], className='champ-table standings-full-table'),
         ])
-
-        table = html.Table([
-            html.Thead(html.Tr([
-                html.Th('POS'), html.Th(''),
-                html.Th('DRV'), html.Th('NAME'),
-                html.Th('WINS', style={'textAlign': 'center'}),
-                html.Th('PTS'),
-            ])),
-            html.Tbody(rows),
-        ], className='champ-table standings-full-table')
 
         drivers = driver_standings['Abbreviation'].tolist()
 
