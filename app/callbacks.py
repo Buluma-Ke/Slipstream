@@ -957,30 +957,61 @@ def update_driver_standings_all(year):
                 rank = list(pts.index).index(drv) + 1 \
                     if drv in pts.index else None
                 rankings.append(rank)
+            # Add lead-in (flat start)
+            x_vals = [rounds[0] - 0.5] + rounds
+            y_vals = [rankings[0]] + rankings
+
             fig2.add_trace(go.Scatter(
-                x=rounds, y=rankings,
-                name=drv, line=dict(color=color, width=1.5, shape='spline', smoothing=1.3),
+                x=x_vals,
+                y=y_vals,
+                name=drv,
+                line=dict(color=color, width=1.5, shape='spline', smoothing=0.8),
                 mode='lines',
             ))
+
             # Driver label on right
             final_rank = rankings[-1] if rankings else None
             if final_rank:
                 fig2.add_annotation(
                     x=rounds[-1], y=final_rank, text=drv,
                     xanchor='left', showarrow=False,
-                    font=dict(color=color, size=10,
+                    font=dict(color=color, size=9,
                               family='Titillium Web'),
-                    xshift=8,
+                    xshift=6,
                 )
+
+        actual_max = driver_standings['Pos'].max()
+
+
         fig2.update_layout(
-            **TRANSPARENT,
+            plot_bgcolor='rgba(0,0,0,0)',
+            paper_bgcolor='rgba(0,0,0,0)',
+            font=dict(color='#FBF9E4', family='Titillium Web'),
             autosize=True,
             title=dict(text='Driver Ranking Evolution', font=dict(color='#444', size=13)),
-            xaxis=dict(**AXIS, tickvals=rounds),
-            yaxis=dict(**AXIS, autorange='reversed', dtick=1, range=[len(drivers)+0.5, 0.5]),
+
+            xaxis=dict(
+                gridcolor='rgba(0,0,0,0)',
+                title='',
+                showline=False,
+                zeroline=False,
+                tickfont=dict(color='#444'),
+                tickvals=rounds,
+                range=[rounds[0] - 1, rounds[-1]]
+            ),
+            yaxis=dict(
+                gridcolor='rgba(0,0,0,0)',
+                title='',
+                showline=False,
+                zeroline=False,
+                tickfont=dict(color='#444'),
+                autorange='reversed',
+                dtick=1,
+            ),
             showlegend=False,
-            margin=dict(l=40, r=80, t=40, b=20),
+            margin=dict(l=40, r=60, t=40, b=20),
         )
+
 
         # ── Stats ──
         podiums = all_results[all_results['Position'] <= 3]\
