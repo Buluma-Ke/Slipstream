@@ -965,8 +965,9 @@ def update_driver_standings_all(year):
                 x=x_vals,
                 y=y_vals,
                 name=drv,
-                line=dict(color=color, width=1.5, shape='spline', smoothing=0.8),
-                mode='lines',
+                line=dict(color=color, width=1.5, shape='spline', smoothing=0.6),
+                mode='lines+markers',
+                marker=dict(size=3),
             ))
 
             # Driver label on right
@@ -1007,6 +1008,7 @@ def update_driver_standings_all(year):
                 tickfont=dict(color='#444'),
                 autorange='reversed',
                 dtick=1,
+                range=[actual_max, 1],  
             ),
             showlegend=False,
             margin=dict(l=40, r=60, t=40, b=20),
