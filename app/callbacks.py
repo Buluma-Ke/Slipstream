@@ -945,18 +945,30 @@ def update_driver_standings_all(year):
 
         # ── Ranking evolution ──
         fig2 = go.Figure()
+
+        valid_drivers = set(driver_standings['Abbreviation'])
+
         for drv in drivers:
             drv_data = all_results[all_results['Abbreviation'] == drv]
             team = drv_data.iloc[0]['TeamName'] if len(drv_data) > 0 else ''
             color = TEAM_COLORS.get(team, '#444')
+
             rankings = []
+
             for r in rounds:
                 up_to = all_results[all_results['RoundNumber'] <= r]
-                pts = up_to.groupby('Abbreviation')['Points'].sum()\
+
+                pts = (
+                    up_to.groupby('Abbreviation')['Points']
+                    .sum()
+                    .loc[lambda x: x.index.isin(valid_drivers)]
                     .sort_values(ascending=False)
+                )
                 rank = list(pts.index).index(drv) + 1 \
                     if drv in pts.index else None
+                
                 rankings.append(rank)
+
             # Add lead-in (flat start)
             x_vals = [rounds[0] - 0.5] + rounds
             y_vals = [rankings[0]] + rankings
@@ -965,9 +977,9 @@ def update_driver_standings_all(year):
                 x=x_vals,
                 y=y_vals,
                 name=drv,
-                line=dict(color=color, width=1.5, shape='spline', smoothing=0.8),
+                line=dict(color=color, width=1.5, shape='spline', smoothing=0.9),
                 mode='lines+markers',
-                marker=dict(size=3),
+                marker=dict(size=2),
             ))
 
             # Driver label on right
@@ -981,7 +993,7 @@ def update_driver_standings_all(year):
                     xshift=6,
                 )
 
-        actual_max = driver_standings['Pos'].max()
+        actual_max = len(valid_drivers)
 
 
         fig2.update_layout(
@@ -1008,7 +1020,8 @@ def update_driver_standings_all(year):
                 tickfont=dict(color='#444'),
                 #autorange='reversed',
                 dtick=1,
-                range=[actual_max, 1], 
+                range=[actual_max, 1],
+                tickvals=list(range(1, actual_max + 1)),  # ✅ no fake ticks 
             ),
             showlegend=False,
             margin=dict(l=40, r=60, t=40, b=20),
