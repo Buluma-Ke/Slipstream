@@ -965,7 +965,7 @@ def update_driver_standings_all(year):
                 x=x_vals,
                 y=y_vals,
                 name=drv,
-                line=dict(color=color, width=1.5, shape='spline', smoothing=0.6),
+                line=dict(color=color, width=1.5, shape='spline', smoothing=0.8),
                 mode='lines+markers',
                 marker=dict(size=3),
             ))
@@ -998,7 +998,7 @@ def update_driver_standings_all(year):
                 zeroline=False,
                 tickfont=dict(color='#444'),
                 tickvals=rounds,
-                range=[rounds[0] - 1, rounds[-1]]
+                range=[rounds[0] - 1, rounds[-1]],
             ),
             yaxis=dict(
                 gridcolor='rgba(0,0,0,0)',
@@ -1006,9 +1006,9 @@ def update_driver_standings_all(year):
                 showline=False,
                 zeroline=False,
                 tickfont=dict(color='#444'),
-                autorange='reversed',
+                #autorange='reversed',
                 dtick=1,
-                range=[actual_max, 1],  
+                range=[actual_max, 1], 
             ),
             showlegend=False,
             margin=dict(l=40, r=60, t=40, b=20),
