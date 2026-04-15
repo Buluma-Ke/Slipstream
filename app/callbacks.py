@@ -967,6 +967,13 @@ def update_driver_standings_all(year):
                 rank = list(pts.index).index(drv) + 1 \
                     if drv in pts.index else None
                 
+                if drv in pts.index:
+                    rank = list(pts.index).index(drv) + 1
+                elif rankings:
+                    rank = rankings[-1]  # 👈 carry previous rank forward
+                else:
+                    rank = None
+
                 rankings.append(rank)
 
             # Add lead-in (flat start)

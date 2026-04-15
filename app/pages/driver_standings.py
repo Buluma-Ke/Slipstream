@@ -48,11 +48,18 @@ def layout():
                     dcc.Graph(id='drv-ranking-evolution',
                             config={'displayModeBar': False, 'responsive': True},
                             style={'height': '500px', 'marginBottom': '8px', 'width': '100%'}),
-                    dcc.Graph(id='drv-stats-chart',
-                            config={'displayModeBar': False, 'responsive': True},
-                            style={'height': '500px', 'width': '100%'}),
+                    # dcc.Graph(id='drv-stats-chart',
+                    #         config={'displayModeBar': False, 'responsive': True},
+                    #         style={'height': '500px', 'width': '100%'}),
                 ], className='drv-right'),
-            ])
+            ]),
+
+            html.Div(
+                dcc.Graph(id='drv-stats-chart',
+                    config={'displayModeBar': False, 'responsive': True},
+                    #style={'height': '500px', 'width': '100%'}),
+                    ), className='drv-stats-full'),
+
         ], className='drv-standings-layout'),
 
     ], className='home-wrapper')

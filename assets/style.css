@@ -878,6 +878,7 @@ body::before {
 .drv-standings-layout {
     display: grid;
     grid-template-columns: 340px 1fr;
+    grid-auto-rows: auto auto;   /* 👈 IMPORTANT */
     gap: 12px;
     height: calc(100vh - 80px);
     overflow-y: auto;
@@ -900,12 +901,19 @@ body::before {
 .drv-left {
     min-width: 0;
     overflow-y: visible;
+    grid-column: 1;
+    grid-row: 1;
 }
 
 .drv-right {
     min-width: 0;
     padding-left: 12px;
     overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    grid-column: 1 / -1;
+    grid-row: 2; 
 }
 
 @media (max-width: 600px) {
@@ -932,5 +940,17 @@ body::before {
 .drv-right > div,
 .drv-right > div > div {
     width: 100% !important;
+}
+
+.drv-stats-full {
+    grid-column: 1 / -1;   /* span full width */
+    display: flex;
+    justify-content: center;
+    margin-top: 10px;
+}
+
+.drv-stats-full .js-plotly-plot {
+    width: 100%;
+    max-width: 900px;
 }
 
