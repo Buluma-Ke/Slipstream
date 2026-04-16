@@ -63,13 +63,16 @@ def layout():
             ),
 
             # Bottom — Full width stats chart
-            html.Div(
+            html.Div([
                 dcc.Graph(
                     id='drv-stats-chart',
                     config={'displayModeBar': False, 'responsive': True},
                     style={'height': '500px', 'width': '100%'}
-                ), 
-                className='drv-stats-full'
+                ),
+                dcc.Graph(id='drv-points-distribution',
+                    config={'displayModeBar': False, 'responsive': True},
+                    style={'height': '600px', 'width': '100%'}), 
+            ], className='drv-stats-full'
             ),
 
         ], className='drv-standings-layout'),

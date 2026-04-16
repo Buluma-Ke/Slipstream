@@ -782,6 +782,7 @@ def close_drv_standings_dropdown(n_clicks):
     Output('drv-points-evolution', 'figure'),
     Output('drv-ranking-evolution', 'figure'),
     Output('drv-stats-chart', 'figure'),
+    Output('drv-points-distribution', 'figure'),
     Input('drv-standings-store-year', 'data'),
 )
 def update_driver_standings_all(year):
@@ -824,7 +825,7 @@ def update_driver_standings_all(year):
 
         if not results_list:
             err = html.Div('No data.', className='standings-empty')
-            return err, empty, empty, empty
+            return err, empty, empty, empty, empty
 
         all_results = pd.concat(results_list, ignore_index=True)
         rounds = sorted(all_results['RoundNumber'].unique())
@@ -1107,12 +1108,61 @@ def update_driver_standings_all(year):
             margin=dict(l=40, r=40, t=60, b=20),
         )
 
-        return table, fig1, fig2, fig3
+
+        # ── Points distribution ──
+        fig4 = go.Figure()
+
+        for _, event in races.iterrows():
+            event_results = all_results[all_results['RoundNumber'] == event['RoundNumber']]\
+                .sort_values('Position')
+            event_name = event['EventName'].replace(' Grand Prix', '')
+            flag = ''
+
+            for _, driver_row in event_results.iterrows():
+                if driver_row['Points'] <= 0:
+                    continue
+                team = driver_row['TeamName']
+                color = TEAM_COLORS.get(team, '#444')
+                fig4.add_trace(go.Bar(
+                    name=driver_row['Abbreviation'],
+                    y=[event_name],
+                    x=[driver_row['Points']],
+                    orientation='h',
+                    marker_color=color,
+                    showlegend=False,
+                    hovertemplate=f"{driver_row['Abbreviation']} — {int(driver_row['Points'])} pts<extra></extra>",
+                ))
+
+        fig4.update_layout(
+            **TRANSPARENT,
+            autosize=True,
+            title=dict(text='Points Distribution', font=dict(color='#444', size=13)),
+            barmode='stack',
+            xaxis=dict(
+                gridcolor='rgba(0,0,0,0)',
+                title='',
+                showline=False,
+                zeroline=False,
+                tickfont=dict(color='#444'),
+            ),
+            yaxis=dict(
+                gridcolor='rgba(0,0,0,0)',
+                title='',
+                showline=False,
+                zeroline=False,
+                tickfont=dict(color='#888', size=10),
+                autorange='reversed',
+            ),
+            margin=dict(l=20, r=20, t=40, b=20),
+            height=600,
+)
+
+        return table, fig1, fig2, fig3, fig4
 
     except Exception as e:
         print(f'Driver standings error: {e}')
         err = html.Div(f'Error: {e}', className='standings-empty')
-        return err, empty, empty, empty
+        return err, empty, empty, empty, empty
 
 
 # ── Constructor standings page ────────────────────────────────────────────────
