@@ -1,9 +1,9 @@
 from dash import html, dcc
 from dash_iconify import DashIconify
 
-
 def layout():
     return html.Div([
+        # Header Row
         html.Div([
             html.Div('Driver Standings', className='home-page-title'),
             html.Div([
@@ -14,6 +14,7 @@ def layout():
                               style={'marginBottom': '0', 'marginRight': '6px'}),
                     html.Span(id='drv-standings-pill-year', children='2025'),
                 ], className='year-pill-single', id='drv-standings-year-toggle'),
+                
                 html.Div(
                     [html.Div(str(y),
                               id={'type': 'drv-standings-year-pill', 'index': y},
@@ -23,6 +24,7 @@ def layout():
                     className='year-pill-menu',
                     style={'display': 'none'},
                 ),
+                
                 html.Div(id='drv-standings-year-overlay',
                          className='year-pill-overlay',
                          style={'display': 'none'}, n_clicks=0),
@@ -30,35 +32,45 @@ def layout():
                       'alignItems': 'center', 'gap': '8px'}),
         ], className='home-top-row'),
 
-        # Two column layout
+        # Main Layout Grid
         html.Div([
             dcc.Store(id='drv-standings-data'),
-                # Left — standings table
-                html.Div(
-                    html.Div(id='drv-standings-content'),
-                    className='drv-left',
-                ),
-
-                # Right — charts stacked
-                dcc.Loading(type='circle', color='#E8002D', children=[
-                html.Div([
-                    dcc.Graph(id='drv-points-evolution',
-                            config={'displayModeBar': False, 'responsive': True},
-                            style={'height': '400px', 'marginBottom': '8px', 'width': '100%'}),
-                    dcc.Graph(id='drv-ranking-evolution',
-                            config={'displayModeBar': False, 'responsive': True},
-                            style={'height': '500px', 'marginBottom': '8px', 'width': '100%'}),
-                    # dcc.Graph(id='drv-stats-chart',
-                    #         config={'displayModeBar': False, 'responsive': True},
-                    #         style={'height': '500px', 'width': '100%'}),
-                ], className='drv-right'),
-            ]),
-
+            
+            # Left — standings table
             html.Div(
-                dcc.Graph(id='drv-stats-chart',
+                html.Div(id='drv-standings-content'),
+                className='drv-left',
+            ),
+
+            # Right — evolution charts stacked
+            dcc.Loading(
+                type='circle', 
+                color='#E8002D', 
+                children=[
+                    html.Div([
+                        dcc.Graph(
+                            id='drv-points-evolution',
+                            config={'displayModeBar': False, 'responsive': True},
+                            style={'height': '400px', 'marginBottom': '8px', 'width': '100%'}
+                        ),
+                        dcc.Graph(
+                            id='drv-ranking-evolution',
+                            config={'displayModeBar': False, 'responsive': True},
+                            style={'height': '500px', 'marginBottom': '8px', 'width': '100%'}
+                        ),
+                    ], className='drv-right'),
+                ]
+            ),
+
+            # Bottom — Full width stats chart
+            html.Div(
+                dcc.Graph(
+                    id='drv-stats-chart',
                     config={'displayModeBar': False, 'responsive': True},
-                    #style={'height': '500px', 'width': '100%'}),
-                    ), className='drv-stats-full'),
+                    style={'height': '500px', 'width': '100%'}
+                ), 
+                className='drv-stats-full'
+            ),
 
         ], className='drv-standings-layout'),
 

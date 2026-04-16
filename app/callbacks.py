@@ -1040,41 +1040,71 @@ def update_driver_standings_all(year):
             .groupby('Abbreviation').size()
         points_finishes = all_results[all_results['Points'] > 0]\
             .groupby('Abbreviation').size()
+        
+        poles = all_results[all_results['GridPosition'] == 1]\
+            .groupby('Abbreviation').size()
+
         dnfs = all_results[all_results['Status'].str.contains(
-            'DNF|Retired|Accident|Engine|Mechanical',
+            'DNF|Retired|Accident|Engine|Mechanical|Disqualified|DNS',
             case=False, na=False)].groupby('Abbreviation').size()
 
         fig3 = go.Figure()
+
+        # Wins - Gold
         fig3.add_trace(go.Bar(
             name='Wins', x=drivers,
             y=[wins.get(d, 0) for d in drivers],
-            marker_color='#c9a84c',
+            marker_color='#fccf3e', 
         ))
+
+        # Podiums - Blue
         fig3.add_trace(go.Bar(
             name='Podiums', x=drivers,
             y=[podiums.get(d, 0) for d in drivers],
-            marker_color='#5B88B2',
+            marker_color='#1e88e5',
         ))
+
+        # Finish in points - Silver
         fig3.add_trace(go.Bar(
-            name='Points finishes', x=drivers,
+            name='Finish in points', x=drivers,
             y=[points_finishes.get(d, 0) for d in drivers],
-            marker_color='#555',
+            marker_color='#cccccc',
         ))
+
+        # Pole positions - Purple
         fig3.add_trace(go.Bar(
-            name='DNFs', x=drivers,
-            y=[-dnfs.get(d, 0) for d in drivers],
-            marker_color='#E8002D',
+            name='Pole positions', x=drivers,
+            y=[poles.get(d, 0) for d in drivers],
+            marker_color='#b33dc6',
         ))
+
+        # DNF/DNS/DSQ - Red
+        fig3.add_trace(go.Bar(
+            name='DNF/DNS/DSQ', x=drivers,
+            y=[-dnfs.get(d, 0) for d in drivers],
+            marker_color='#e53935',
+        ))
+
         fig3.update_layout(
             **TRANSPARENT,
             autosize=True,
-            title=dict(text='Stats', font=dict(color='#444', size=13)),
+            title=dict(text='Season Statistics', font=dict(color='#888', size=13)),
             barmode='group',
-            xaxis=AXIS,
-            yaxis=AXIS,
-            legend=dict(bgcolor='rgba(0,0,0,0)',
-                        font=dict(color='#888', size=10)),
-            margin=dict(l=40, r=40, t=40, b=20),
+            bargap=0.15,
+            bargroupgap=0.1,
+            # Using your standard AXIS dict (no lines/borders)
+            xaxis=AXIS, 
+            yaxis=AXIS, 
+            legend=dict(
+                orientation="h",
+                yanchor="bottom",
+                y=1.02,
+                xanchor="right",
+                x=1,
+                bgcolor='rgba(0,0,0,0)',
+                font=dict(color='#888', size=10)
+            ),
+            margin=dict(l=40, r=40, t=60, b=20),
         )
 
         return table, fig1, fig2, fig3
