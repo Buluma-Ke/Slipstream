@@ -938,8 +938,14 @@ def update_driver_standings_all(year):
             **TRANSPARENT,
             autosize=True,
             title=dict(text='Driver Standings Evolution', font=dict(color='#444', size=13)),
-            xaxis=dict(**AXIS, tickvals=rounds),
-            yaxis=AXIS,
+            xaxis=AXIS | dict(
+                range=[1, 24],          # Force the view to end exactly at 24
+                autorange=False,         # Stop Plotly from adding extra padding
+                showgrid=False,
+                # 'constrained' ensures the axis line matches the data range
+                constrain='domain'
+            ),
+            yaxis=AXIS | dict(showgrid=True, gridcolor='rgba(255, 255, 255, 0.05)', zeroline=True, zerolinecolor='white'),
             showlegend=False,
             margin=dict(l=40, r=40, t=40, b=20),
         )
@@ -1020,16 +1026,20 @@ def update_driver_standings_all(year):
                 tickvals=rounds,
                 range=[rounds[0] - 1, rounds[-1]],
             ),
-            yaxis=dict(
-                gridcolor='rgba(0,0,0,0)',
+            yaxis=AXIS | dict(
                 title='',
                 showline=False,
-                zeroline=False,
                 tickfont=dict(color='#444'),
-                #autorange='reversed',
+                # Keep your custom range and tick logic
                 dtick=1,
                 range=[actual_max, 1],
-                tickvals=list(range(1, actual_max + 1)),  # ✅ no fake ticks 
+                tickvals=list(range(1, actual_max + 1)),
+                # New "Ghost" Grid lines
+                showgrid=True, 
+                gridcolor='rgba(255, 255, 255, 0.05)', 
+                gridwidth=1,
+                zeroline=True,
+                zerolinecolor='rgba(255, 255, 255, 0.1)'
             ),
             showlegend=False,
             margin=dict(l=40, r=60, t=40, b=20),
@@ -1055,47 +1065,47 @@ def update_driver_standings_all(year):
         fig3.add_trace(go.Bar(
             name='Wins', x=drivers,
             y=[wins.get(d, 0) for d in drivers],
-            marker_color='#fccf3e', 
+            marker=dict(color='#6C5FA7', line=dict(color='#6C5FA7', width=1)), 
         ))
 
         # Podiums - Blue
         fig3.add_trace(go.Bar(
             name='Podiums', x=drivers,
             y=[podiums.get(d, 0) for d in drivers],
-            marker_color='#1e88e5',
+            marker=dict(color='#6B3779', line=dict(color='#6B3779', width=1)),
         ))
 
         # Finish in points - Silver
         fig3.add_trace(go.Bar(
             name='Finish in points', x=drivers,
             y=[points_finishes.get(d, 0) for d in drivers],
-            marker_color='#cccccc',
+            marker=dict(color='#B24968', line=dict(color='#B24968', width=1))
         ))
 
         # Pole positions - Purple
         fig3.add_trace(go.Bar(
             name='Pole positions', x=drivers,
             y=[poles.get(d, 0) for d in drivers],
-            marker_color='#b33dc6',
+            marker=dict(color='#b33dc6', line=dict(color='#b33dc6', width=1))
         ))
 
         # DNF/DNS/DSQ - Red
         fig3.add_trace(go.Bar(
             name='DNF/DNS/DSQ', x=drivers,
             y=[-dnfs.get(d, 0) for d in drivers],
-            marker_color='#e53935',
+            marker=dict(color='#FA8573', line=dict(color='#FA8573', width=1))
         ))
 
         fig3.update_layout(
             **TRANSPARENT,
             autosize=True,
-            title=dict(text='Season Statistics', font=dict(color='#888', size=13)),
+            title=dict(text='Season Statistics', font=dict(color='#444', size=13)),
             barmode='group',
             bargap=0.15,
             bargroupgap=0.1,
             # Using your standard AXIS dict (no lines/borders)
             xaxis=AXIS, 
-            yaxis=AXIS, 
+            yaxis=AXIS | dict(showgrid=True, gridcolor='rgba(255, 255, 255, 0.05)', zeroline=True, zerolinecolor='rgba(255, 255, 255, 0.1)'),
             legend=dict(
                 orientation="h",
                 yanchor="bottom",
@@ -1103,7 +1113,7 @@ def update_driver_standings_all(year):
                 xanchor="right",
                 x=1,
                 bgcolor='rgba(0,0,0,0)',
-                font=dict(color='#888', size=10)
+                font=dict(color='#444', size=10)
             ),
             margin=dict(l=40, r=40, t=60, b=20),
         )
@@ -1128,7 +1138,7 @@ def update_driver_standings_all(year):
                     y=[event_name],
                     x=[driver_row['Points']],
                     orientation='h',
-                    marker_color=color,
+                    marker=dict(color=color, line=dict(color=color, width=1)),
                     showlegend=False,
                     hovertemplate=f"{driver_row['Abbreviation']} — {int(driver_row['Points'])} pts<extra></extra>",
                 ))
@@ -1150,7 +1160,7 @@ def update_driver_standings_all(year):
                 title='',
                 showline=False,
                 zeroline=False,
-                tickfont=dict(color='#888', size=10),
+                tickfont=dict(color='#444', size=10),
                 autorange='reversed',
             ),
             margin=dict(l=20, r=20, t=40, b=20),
