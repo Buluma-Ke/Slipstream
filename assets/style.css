@@ -956,3 +956,86 @@ body::before {
     width: 100% !important;
     /*max-width: 900px;*/
 }
+
+
+/* ── Constructor standings layout ── */
+.const-standings-layout {
+    display: grid;
+    grid-template-columns: 340px 1fr;
+    grid-auto-rows: auto auto;
+    gap: 12px;
+    height: calc(100vh - 80px);
+    overflow-y: auto;
+    overflow-x: hidden;
+}
+
+.const-standings-layout::-webkit-scrollbar { width: 3px; }
+.const-standings-layout::-webkit-scrollbar-track { background: transparent; }
+.const-standings-layout::-webkit-scrollbar-thumb {
+    background: rgba(91,136,178,0.2);
+    border-radius: 2px;
+}
+
+.const-standings-layout .js-plotly-plot,
+.const-standings-layout .plot-container,
+.const-standings-layout .svg-container {
+    width: 100% !important;
+}
+
+.standings-table-wrapper {
+    min-width: 0;
+    overflow-y: visible;
+    grid-column: 1;
+    grid-row: 1;
+}
+
+.const-right {
+    min-width: 0;
+    padding-left: 12px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    grid-column: 2;
+    grid-row: 1;
+}
+
+.const-right .js-plotly-plot,
+.const-right .plot-container {
+    width: 100% !important;
+}
+
+.const-right > div,
+.const-right > div > div {
+    width: 100% !important;
+}
+
+.const-stats-full {
+    grid-column: 1 / -1;
+    grid-row: 2;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    margin-top: 20px;
+}
+
+.const-stats-full .js-plotly-plot {
+    width: 100% !important;
+}
+
+@media (max-width: 1200px) {
+    .const-standings-layout {
+        grid-template-columns: 280px 1fr;
+    }
+}
+
+@media (max-width: 600px) {
+    .const-standings-layout {
+        grid-template-columns: 1fr;
+        height: auto;
+    }
+    .standings-table-wrapper {
+        width: 100%;
+    }
+}
