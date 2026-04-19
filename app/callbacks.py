@@ -759,7 +759,9 @@ def toggle_drv_standings_year(n_clicks, current_style):
     prevent_initial_call=True,
 )
 def select_drv_standings_year(n_clicks, ids):
+
     from dash import ctx
+
     triggered = ctx.triggered_id
     if not triggered:
         return 2025, '2025', {'display': 'none'}, {'display': 'none'}
@@ -1199,7 +1201,9 @@ def toggle_con_standings_year(n_clicks, current_style):
     prevent_initial_call=True,
 )
 def select_con_standings_year(n_clicks, ids):
+
     from dash import ctx
+
     triggered = ctx.triggered_id
     if not triggered:
         return 2025, '2025', {'display': 'none'}, {'display': 'none'}
@@ -1219,11 +1223,33 @@ def close_con_standings_dropdown(n_clicks):
 
 @callback(
     Output('con-standings-content', 'children'),
+    Output('const-points-evolution', 'figure'),
+    Output('const-ranking-evolution', 'figure'),
+    Output('const-stats-chart', 'figure'),
+    Output('const-points-distribution', 'children'),
     Input('con-standings-store-year', 'data'),
 )
 def update_constructor_standings(year):
+
     import fastf1
     import pandas as pd
+    import plotly.graph_objects as go
+
+
+    TRANSPARENT = dict(
+        plot_bgcolor='rgba(0,0,0,0)',
+        paper_bgcolor='rgba(0,0,0,0)',
+        font=dict(color='#FBF9E4', family='Titillium Web'),
+    )
+    AXIS = dict(
+        gridcolor='rgba(0,0,0,0)',
+        title='',
+        showline=False,
+        zeroline=False,
+        tickfont=dict(color='#444'),
+    )
+    empty = go.Figure().update_layout(**TRANSPARENT)
+
     try:
         schedule = fastf1.get_event_schedule(year, include_testing=False)
         races = schedule[schedule['EventFormat'] != 'testing']
@@ -1237,15 +1263,20 @@ def update_constructor_standings(year):
                 if res is None or len(res) == 0:
                     continue
                 res = res.copy()
+                res['RoundNumber'] = event['RoundNumber']
+                res['EventName'] = event['EventName']
                 results_list.append(res)
             except Exception:
                 continue
 
         if not results_list:
-            return html.Div('No data available.', className='standings-empty')
+            err = html.Div('No data available.', className='standings-empty')
+            return err, empty, empty, empty, empty
 
         all_results = pd.concat(results_list, ignore_index=True)
+        rounds = sorted(all_results['RoundNumber'].unique())
 
+        # ── Const Standings table ──
         constructor_standings = all_results.groupby(
             'TeamName'
         )['Points'].sum().reset_index().sort_values('Points', ascending=False)
@@ -1275,6 +1306,50 @@ def update_constructor_standings(year):
                         style={'textAlign': 'center'}),
                 html.Td(f"{int(row['Points'])}", className='pts'),
             ], className='p1' if pos == 1 else ''))
+
+        # ── Hero card ──
+        leader = constructor_standings.iloc[0]
+        leader_team = leader['TeamName']
+        leader_color = TEAM_COLORS.get(leader_team, '#444')
+        leader_logo = TEAM_LOGOS.get(leader_team, None)
+
+
+        hero = html.Div([
+            html.Div([
+                html.Div(f'{year} Constructors champion',
+                         style={'fontSize': '0.6rem', 'color': '#888',
+                                'letterSpacing': '0.15em',
+                                'textTransform': 'uppercase',
+                                'fontFamily': 'Titillium Web, sans-serif',
+                                'marginBottom': '8px'}),
+                html.Div(leader_team,
+                         style={'fontFamily': 'Titillium Web, sans-serif',
+                                'fontSize': '2rem', 'fontWeight': '900',
+                                'color': leader_color, 'lineHeight': '1'}),
+                html.Div(f"{int(leader['Points'])} pts",
+                         style={'fontSize': '0.7rem', 'color': '#888',
+                                'fontFamily': 'Titillium Web, sans-serif',
+                                'marginTop': '4px'}),
+            ], style={'flex': '1'}),
+            html.Div(
+                html.Img(src=f'/assets/logos/{leader_logo}.avif',
+                         style={'height': '32px', 'objectFit': 'contain'})
+                if leader_logo else html.Div(),
+                style={'display': 'flex', 'alignItems': 'center'},
+            ),
+        ], style={
+            'display': 'flex',
+            'justifyContent': 'space-between',
+            'alignItems': 'center',
+            'background': f'linear-gradient(135deg, rgba(0,0,0,0.8), {leader_color}22)',
+            'border': f'1px solid {leader_color}44',
+            'borderLeft': f'3px solid {leader_color}',
+            'borderRadius': '6px',
+            'padding': '14px 16px',
+            'marginBottom': '16px',
+           
+        })
+
 
         return html.Table([
             html.Thead(html.Tr([
