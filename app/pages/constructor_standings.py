@@ -30,6 +30,50 @@ def layout():
                       'alignItems': 'center', 'gap': '8px'}),
         ], className='home-top-row'),
 
-        html.Div(id='con-standings-content', className='standings-table-wrapper'),
+        #Main Layout Grid
+        html.Div([
+            dcc.Store(id='const-standings-data'),
+
+            #Left - Standings table
+            html.Div(
+                html.Div(id='con-standings-content'), 
+                className='standings-table-wrapper',
+            ),
+
+             # Right — evolution charts stacked
+            dcc.Loading(
+                type='circle', 
+                color='#E8002D', 
+                children=[
+                    html.Div([
+                        dcc.Graph(
+                            id='const-points-evolution',
+                            config={'displayModeBar': False, 'responsive': True},
+                            style={'height': '400px', 'marginBottom': '8px', 'width': '100%'}
+                        ),
+                        dcc.Graph(
+                            id='const-ranking-evolution',
+                            config={'displayModeBar': False, 'responsive': True},
+                            style={'height': '500px', 'marginBottom': '8px', 'width': '100%'}
+                        ),
+                    ], className='const-right'),
+                ]
+            ),
+
+            # Bottom — Full width stats chart
+            html.Div([
+                dcc.Graph(
+                    id='const-stats-chart',
+                    config={'displayModeBar': False, 'responsive': True},
+                    style={'height': '500px', 'width': '100%'}
+                ),
+                dcc.Graph(id='const-points-distribution',
+                    config={'displayModeBar': False, 'responsive': True},
+                    style={'height': '600px', 'width': '100%'}), 
+            ], className='const-stats-full'
+            ),
+
+        ], className='const-standings-layout'),
 
     ], className='home-wrapper')
+           
