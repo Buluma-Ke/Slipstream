@@ -1220,7 +1220,6 @@ def select_con_standings_year(n_clicks, ids):
 def close_con_standings_dropdown(n_clicks):
     return {'display': 'none'}, {'display': 'none'}
 
-
 @callback(
     Output('con-standings-content', 'children'),
     Output('const-points-evolution', 'figure'),
@@ -1234,7 +1233,6 @@ def update_constructor_standings(year):
     import fastf1
     import pandas as pd
     import plotly.graph_objects as go
-
 
     TRANSPARENT = dict(
         plot_bgcolor='rgba(0,0,0,0)',
@@ -1252,7 +1250,7 @@ def update_constructor_standings(year):
 
     try:
         schedule = fastf1.get_event_schedule(year, include_testing=False)
-        races = schedule[schedule['EventFormat'] != 'testing']
+        races = schedule[schedule['EventFormat'] != 'testing'].reset_index(drop=True)
         results_list = []
 
         for _, event in races.iterrows():
@@ -1271,12 +1269,12 @@ def update_constructor_standings(year):
 
         if not results_list:
             err = html.Div('No data available.', className='standings-empty')
-            return err, empty, empty, empty, empty
+            return err, empty, empty, empty, []
 
         all_results = pd.concat(results_list, ignore_index=True)
         rounds = sorted(all_results['RoundNumber'].unique())
 
-        # ── Const Standings table ──
+        # ── Constructor standings table ──
         constructor_standings = all_results.groupby(
             'TeamName'
         )['Points'].sum().reset_index().sort_values('Points', ascending=False)
@@ -1313,10 +1311,9 @@ def update_constructor_standings(year):
         leader_color = TEAM_COLORS.get(leader_team, '#444')
         leader_logo = TEAM_LOGOS.get(leader_team, None)
 
-
         hero = html.Div([
             html.Div([
-                html.Div(f'{year} Constructors champion',
+                html.Div(f'{year} Constructors Champion',
                          style={'fontSize': '0.6rem', 'color': '#888',
                                 'letterSpacing': '0.15em',
                                 'textTransform': 'uppercase',
@@ -1347,12 +1344,11 @@ def update_constructor_standings(year):
             'borderRadius': '6px',
             'padding': '14px 16px',
             'marginBottom': '16px',
-           
         })
 
         # ── Table ──
         table = html.Div([
-            hero, 
+            hero,
             html.Table([
                 html.Thead(html.Tr([
                     html.Th('POS'), html.Th(''),
@@ -1364,19 +1360,222 @@ def update_constructor_standings(year):
             ], className='champ-table standings-full-table'),
         ])
 
+        constructors = constructor_standings['TeamName'].tolist()
 
-        return html.Table([
-            html.Thead(html.Tr([
-                html.Th('POS'), html.Th(''),
-                html.Th('TEAM'),
-                html.Th('WINS', style={'textAlign': 'center'}),
-                html.Th('PTS'),
-            ])),
-            html.Tbody(rows),
-        ], className='champ-table standings-full-table')
+        # ── Points evolution ──
+        fig1 = go.Figure()
+        for team in constructors:
+            team_data = all_results[all_results['TeamName'] == team]\
+                .groupby('RoundNumber')['Points'].sum()
+            color = TEAM_COLORS.get(team, '#444')
+            cumpts = team_data.reindex(rounds).fillna(0).cumsum()
+            fig1.add_trace(go.Scatter(
+                x=list(cumpts.index), y=list(cumpts.values),
+                name=team, line=dict(color=color, width=1.5),
+                mode='lines+markers', marker=dict(size=4),
+            ))
+        fig1.update_layout(
+            **TRANSPARENT,
+            autosize=True,
+            title=dict(text='Constructor Standings Evolution', font=dict(color='#444', size=13)),
+            xaxis=AXIS | dict(
+                range=[1, 24],
+                autorange=False,
+                showgrid=False,
+                constrain='domain',
+            ),
+            yaxis=AXIS | dict(
+                showgrid=True,
+                gridcolor='rgba(255, 255, 255, 0.05)',
+                zeroline=True,
+                zerolinecolor='white',
+            ),
+            showlegend=False,
+            margin=dict(l=40, r=40, t=40, b=20),
+        )
+
+        # ── Ranking evolution ──
+        fig2 = go.Figure()
+        valid_constructors = set(constructor_standings['TeamName'])
+
+        for team in constructors:
+            color = TEAM_COLORS.get(team, '#444')
+            rankings = []
+
+            for r in rounds:
+                up_to = all_results[all_results['RoundNumber'] <= r]
+                pts = (
+                    up_to.groupby('TeamName')['Points']
+                    .sum()
+                    .loc[lambda x: x.index.isin(valid_constructors)]
+                    .sort_values(ascending=False)
+                )
+                if team in pts.index:
+                    rank = list(pts.index).index(team) + 1
+                elif rankings:
+                    rank = rankings[-1]
+                else:
+                    rank = None
+                rankings.append(rank)
+
+            x_vals = [rounds[0] - 0.5] + rounds
+            y_vals = [rankings[0]] + rankings
+
+            fig2.add_trace(go.Scatter(
+                x=x_vals, y=y_vals,
+                name=team,
+                line=dict(color=color, width=1.5, shape='spline', smoothing=0.9),
+                mode='lines+markers',
+                marker=dict(size=2),
+            ))
+
+            final_rank = rankings[-1] if rankings else None
+            if final_rank:
+                # Shorten long team names for the label
+                short_name = team.split()[-1] if len(team) > 12 else team
+                fig2.add_annotation(
+                    x=rounds[-1], y=final_rank, text=short_name,
+                    xanchor='left', showarrow=False,
+                    font=dict(color=color, size=9, family='Titillium Web'),
+                    xshift=6,
+                )
+
+        actual_max = len(valid_constructors)
+        fig2.update_layout(
+            **TRANSPARENT,
+            autosize=True,
+            title=dict(text='Constructor Ranking Evolution', font=dict(color='#444', size=13)),
+            xaxis=AXIS | dict(
+                tickvals=rounds,
+                range=[rounds[0] - 1, rounds[-1]],
+            ),
+            yaxis=AXIS | dict(
+                dtick=1,
+                range=[actual_max, 1],
+                tickvals=list(range(1, actual_max + 1)),
+                showgrid=True,
+                gridcolor='rgba(255, 255, 255, 0.05)',
+                gridwidth=1,
+                zeroline=True,
+                zerolinecolor='rgba(255, 255, 255, 0.1)',
+            ),
+            showlegend=False,
+            margin=dict(l=40, r=80, t=40, b=20),
+        )
+
+        # ── Stats ──
+        podiums = all_results[all_results['Position'] <= 3]\
+            .groupby('TeamName').size()
+        points_finishes = all_results[all_results['Points'] > 0]\
+            .groupby('TeamName').size()
+        poles = all_results[all_results['GridPosition'] == 1]\
+            .groupby('TeamName').size()
+        dnfs = all_results[all_results['Status'].str.contains(
+            'DNF|Retired|Accident|Engine|Mechanical|Disqualified|DNS',
+            case=False, na=False)].groupby('TeamName').size()
+
+        fig3 = go.Figure()
+        fig3.add_trace(go.Bar(
+            name='Wins', x=constructors,
+            y=[wins.get(t, 0) for t in constructors],
+            marker=dict(color='#6C5FA7', line=dict(color='#6C5FA7', width=1)),
+        ))
+        fig3.add_trace(go.Bar(
+            name='Podiums', x=constructors,
+            y=[podiums.get(t, 0) for t in constructors],
+            marker=dict(color='#6B3779', line=dict(color='#6B3779', width=1)),
+        ))
+        fig3.add_trace(go.Bar(
+            name='Finish in points', x=constructors,
+            y=[points_finishes.get(t, 0) for t in constructors],
+            marker=dict(color='#B24968', line=dict(color='#B24968', width=1)),
+        ))
+        fig3.add_trace(go.Bar(
+            name='Pole positions', x=constructors,
+            y=[poles.get(t, 0) for t in constructors],
+            marker=dict(color='#b33dc6', line=dict(color='#b33dc6', width=1)),
+        ))
+        fig3.add_trace(go.Bar(
+            name='DNF/DNS/DSQ', x=constructors,
+            y=[-dnfs.get(t, 0) for t in constructors],
+            marker=dict(color='#FA8573', line=dict(color='#FA8573', width=1)),
+        ))
+        fig3.update_layout(
+            **TRANSPARENT,
+            autosize=True,
+            title=dict(text='Season Statistics', font=dict(color='#444', size=13)),
+            barmode='group',
+            bargap=0.15,
+            bargroupgap=0.1,
+            xaxis=AXIS,
+            yaxis=AXIS | dict(
+                showgrid=True,
+                gridcolor='rgba(255, 255, 255, 0.05)',
+                zeroline=True,
+                zerolinecolor='rgba(255, 255, 255, 0.1)',
+            ),
+            legend=dict(
+                orientation="h",
+                yanchor="bottom",
+                y=1.02,
+                xanchor="right",
+                x=1,
+                bgcolor='rgba(0,0,0,0)',
+                font=dict(color='#444', size=10),
+            ),
+            margin=dict(l=40, r=40, t=60, b=20),
+        )
+
+        # ── Points distribution (stacked bar per race, one bar per team) ──
+        fig4 = go.Figure()
+        for _, event in races.iterrows():
+            event_results = all_results[all_results['RoundNumber'] == event['RoundNumber']]
+            team_pts = event_results.groupby('TeamName')['Points'].sum()
+            event_name = event['EventName'].replace(' Grand Prix', '')
+
+            for team, pts in team_pts.items():
+                if pts <= 0:
+                    continue
+                color = TEAM_COLORS.get(team, '#444')
+                fig4.add_trace(go.Bar(
+                    name=team,
+                    y=[event_name],
+                    x=[pts],
+                    orientation='h',
+                    marker=dict(color=color, line=dict(color=color, width=1)),
+                    showlegend=False,
+                    hovertemplate=f"{team} — {int(pts)} pts<extra></extra>",
+                ))
+
+        fig4.update_layout(
+            **TRANSPARENT,
+            autosize=True,
+            title=dict(text='Points Distribution', font=dict(color='#444', size=13)),
+            barmode='stack',
+            xaxis=AXIS,
+            yaxis=dict(
+                gridcolor='rgba(0,0,0,0)',
+                title='',
+                showline=False,
+                zeroline=False,
+                tickfont=dict(color='#444', size=10),
+                autorange='reversed',
+            ),
+            margin=dict(l=20, r=20, t=40, b=20),
+            height=600,
+        )
+
+        # Wrap fig4 in a dcc.Graph for the `children` output
+        from dash import dcc
+        points_dist_child = dcc.Graph(
+            figure=fig4,
+            config={'displayModeBar': False},
+            style={'width': '100%'},
+        )
+
+        return table, fig1, fig2, fig3, points_dist_child
 
     except Exception as e:
         print(f'Constructor standings error: {e}')
-        return html.Div(f'Error: {e}', className='standings-empty')
-
-
+        err = html.Div(f'Error: {e}', className='standings-empty')
+        return err, empty, empty, empty, []
