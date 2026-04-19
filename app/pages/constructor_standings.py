@@ -54,7 +54,7 @@ def layout():
                         dcc.Graph(
                             id='const-ranking-evolution',
                             config={'displayModeBar': False, 'responsive': True},
-                            style={'height': '500px', 'marginBottom': '8px', 'width': '100%'}
+                            style={'height': '300px', 'marginBottom': '8px', 'width': '100%'}
                         ),
                     ], className='const-right'),
                 ]

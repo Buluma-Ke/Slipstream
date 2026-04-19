@@ -1225,7 +1225,7 @@ def close_con_standings_dropdown(n_clicks):
     Output('const-points-evolution', 'figure'),
     Output('const-ranking-evolution', 'figure'),
     Output('const-stats-chart', 'figure'),
-    Output('const-points-distribution', 'children'),
+    Output('const-points-distribution', 'figure'),
     Input('con-standings-store-year', 'data'),
 )
 def update_constructor_standings(year):
@@ -1507,7 +1507,10 @@ def update_constructor_standings(year):
             barmode='group',
             bargap=0.15,
             bargroupgap=0.1,
-            xaxis=AXIS,
+            xaxis=AXIS | dict(
+                tickvals=list(range(len(constructors))),
+                ticktext=[''] * len(constructors),  # hide text labels
+            ),
             yaxis=AXIS | dict(
                 showgrid=True,
                 gridcolor='rgba(255, 255, 255, 0.05)',
@@ -1523,7 +1526,26 @@ def update_constructor_standings(year):
                 bgcolor='rgba(0,0,0,0)',
                 font=dict(color='#444', size=10),
             ),
-            margin=dict(l=40, r=40, t=60, b=20),
+            margin=dict(l=40, r=40, t=60, b=60),
+        )
+
+        # Place logos along x-axis
+        images = []
+        for i, team in enumerate(constructors):
+            logo_file = TEAM_LOGOS.get(team)
+            if logo_file:
+                images.append(dict(
+                    source=f'/assets/logos/{logo_file}.avif',
+                    xref='x', yref='paper',
+                    x=i, y=-0.02,
+                    sizex=0.6, sizey=0.08,
+                    xanchor='center', yanchor='top',
+                    layer='above',
+                ))
+
+        fig3.update_layout(
+                images=images,
+                margin=dict(l=40, r=40, t=60, b=80),  # keep enough room for logos
         )
 
         # ── Points distribution (stacked bar per race, one bar per team) ──
@@ -1565,15 +1587,8 @@ def update_constructor_standings(year):
             height=600,
         )
 
-        # Wrap fig4 in a dcc.Graph for the `children` output
-        from dash import dcc
-        points_dist_child = dcc.Graph(
-            figure=fig4,
-            config={'displayModeBar': False},
-            style={'width': '100%'},
-        )
 
-        return table, fig1, fig2, fig3, points_dist_child
+        return table, fig1, fig2, fig3, fig4 #points_dist_child
 
     except Exception as e:
         print(f'Constructor standings error: {e}')
