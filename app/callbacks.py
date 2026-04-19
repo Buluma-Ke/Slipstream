@@ -1350,6 +1350,20 @@ def update_constructor_standings(year):
            
         })
 
+        # ── Table ──
+        table = html.Div([
+            hero, 
+            html.Table([
+                html.Thead(html.Tr([
+                    html.Th('POS'), html.Th(''),
+                    html.Th('TEAM'),
+                    html.Th('WINS', style={'textAlign': 'center'}),
+                    html.Th('PTS'),
+                ])),
+                html.Tbody(rows),
+            ], className='champ-table standings-full-table'),
+        ])
+
 
         return html.Table([
             html.Thead(html.Tr([
