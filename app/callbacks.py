@@ -364,6 +364,7 @@ def toggle_sidebar(n_clicks, current_class):
     return 'sidebar collapsed', 'main-content expanded', 'tabler:chevrons-right'
 
 
+
 # --- Page routing ---
 @callback(
     Output('page-content', 'children'),
