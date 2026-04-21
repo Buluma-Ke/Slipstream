@@ -37,9 +37,9 @@ def build_sidebar():
         html.Div(nav_links, className='sidebar-nav'),
 
         html.Div([
-            DashIconify(icon='tabler:chevrons-left', width=18,
+            DashIconify(icon='tabler:chevrons-right', width=18,
                         id='sidebar-toggle-icon'),
             html.Span('Collapse', className='nav-label'),
         ], id='sidebar-toggle', className='sidebar-toggle nav-item'),
 
-    ], id='sidebar', className='sidebar expanded')
+    ], id='sidebar', className='sidebar collapsed')

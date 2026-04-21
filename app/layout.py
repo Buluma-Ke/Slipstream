@@ -23,6 +23,6 @@ def build_layout():
                 html.Div(id='page-content', className='page-content',
                         children=__import__('app.pages.home', fromlist=['layout']).layout()),
 
-        ], id='main-content', className='main-content'),
+        ], id='main-content', className='main-content expanded'),
 
     ], style={'height': '100vh', 'overflow': 'hidden'})
