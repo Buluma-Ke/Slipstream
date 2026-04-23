@@ -1599,7 +1599,9 @@ def update_constructor_standings(year):
 
 
 
-    # ── Races page ────────────────────────────────────────────────────────────────
+    # ──────────────────── Races page ────────────────────
+
+    
 @callback(
     Output('races-year-pill-dropdown', 'style', allow_duplicate=True),
     Output('races-year-overlay', 'style', allow_duplicate=True),
