@@ -1595,3 +1595,183 @@ def update_constructor_standings(year):
         print(f'Constructor standings error: {e}')
         err = html.Div(f'Error: {e}', className='standings-empty')
         return err, empty, empty, empty, []
+    
+
+
+
+    # ── Races page ────────────────────────────────────────────────────────────────
+@callback(
+    Output('races-year-pill-dropdown', 'style', allow_duplicate=True),
+    Output('races-year-overlay', 'style', allow_duplicate=True),
+    Input('races-year-pill-toggle', 'n_clicks'),
+    State('races-year-pill-dropdown', 'style'),
+    prevent_initial_call=True,
+)
+def toggle_races_year(n_clicks, current_style):
+    if isinstance(current_style, dict) and current_style.get('display') == 'none':
+        return {'display': 'block'}, {'display': 'block'}
+    return {'display': 'none'}, {'display': 'none'}
+
+
+@callback(
+    Output('races-store-year', 'data'),
+    Output('races-pill-year-display', 'children'),
+    Output('races-year-pill-dropdown', 'style', allow_duplicate=True),
+    Output('races-year-overlay', 'style', allow_duplicate=True),
+    Input({'type': 'races-year-pill', 'index': ALL}, 'n_clicks'),
+    State({'type': 'races-year-pill', 'index': ALL}, 'id'),
+    prevent_initial_call=True,
+)
+def select_races_year(n_clicks, ids):
+    from dash import ctx
+    triggered = ctx.triggered_id
+    if not triggered:
+        return 2025, '2025', {'display': 'none'}, {'display': 'none'}
+    selected = triggered['index']
+    return selected, str(selected), {'display': 'none'}, {'display': 'none'}
+
+
+@callback(
+    Output('races-year-pill-dropdown', 'style', allow_duplicate=True),
+    Output('races-year-overlay', 'style', allow_duplicate=True),
+    Input('races-year-overlay', 'n_clicks'),
+    prevent_initial_call=True,
+)
+def close_races_year_dropdown(n_clicks):
+    return {'display': 'none'}, {'display': 'none'}
+
+
+@callback(
+    Output('races-race-pill-dropdown', 'children'),
+    Output('races-race-pill-dropdown', 'style', allow_duplicate=True),
+    Output('races-race-overlay', 'style', allow_duplicate=True),
+    Input('races-race-pill-toggle', 'n_clicks'),
+    State('races-store-year', 'data'),
+    State('races-race-pill-dropdown', 'style'),
+    prevent_initial_call=True,
+)
+def toggle_races_race(n_clicks, year, current_style):
+    if isinstance(current_style, dict) and current_style.get('display') != 'none':
+        return no_update, {'display': 'none'}, {'display': 'none'}
+    schedule = fastf1.get_event_schedule(year, include_testing=False)
+    schedule = schedule[schedule['EventFormat'] != 'testing']
+    items = [
+        html.Div(row['EventName'],
+                 id={'type': 'races-race-pill', 'index': row['RoundNumber'],
+                     'name': row['EventName']},
+                 className='year-dropdown-item')
+        for _, row in schedule.iterrows()
+    ]
+    return items, {'display': 'block'}, {'display': 'block'}
+
+
+@callback(
+    Output('races-store-race', 'data'),
+    Output('races-pill-race-display', 'children'),
+    Output('races-race-pill-dropdown', 'style', allow_duplicate=True),
+    Output('races-race-overlay', 'style', allow_duplicate=True),
+    Input({'type': 'races-race-pill', 'index': ALL, 'name': ALL}, 'n_clicks'),
+    State({'type': 'races-race-pill', 'index': ALL, 'name': ALL}, 'id'),
+    prevent_initial_call=True,
+)
+def select_races_race(n_clicks, ids):
+    from dash import ctx
+    triggered = ctx.triggered_id
+    if not triggered:
+        return no_update, no_update, {'display': 'none'}, {'display': 'none'}
+    name = triggered['name'].replace(' Grand Prix', '')
+    return triggered['index'], name, {'display': 'none'}, {'display': 'none'}
+
+
+@callback(
+    Output('races-race-pill-dropdown', 'style', allow_duplicate=True),
+    Output('races-race-overlay', 'style', allow_duplicate=True),
+    Input('races-race-overlay', 'n_clicks'),
+    prevent_initial_call=True,
+)
+def close_races_race_dropdown(n_clicks):
+    return {'display': 'none'}, {'display': 'none'}
+
+
+@callback(
+    Output('races-content', 'children'),
+    Input('races-store-race', 'data'),
+    State('races-store-year', 'data'),
+)
+def update_races_content(round_number, year):
+    import plotly.graph_objects as go
+
+    if not round_number or not year:
+        return html.Div('Select a season and race to begin.',
+                        style={'color': '#555', 'fontFamily': 'Titillium Web',
+                               'fontSize': '0.8rem', 'padding': '20px'})
+    try:
+        session = fastf1.get_session(year, round_number, 'R')
+        session.load(telemetry=False, weather=False, messages=False)
+
+        results = session.results
+        if results is None or len(results) == 0:
+            return html.Div('No data for this session.')
+
+        # ── Top 20 fastest laps ──
+        laps = session.laps.copy()
+        laps = laps.dropna(subset=['LapTime'])
+        laps['LapTimeSec'] = laps['LapTime'].dt.total_seconds()
+        fastest = laps.groupby('Driver')['LapTimeSec'].min().reset_index()
+        fastest = fastest.sort_values('LapTimeSec').head(20)
+        fastest['Pos'] = range(1, len(fastest) + 1)
+
+        # Merge team info
+        driver_team = results[['Abbreviation', 'TeamName']].copy()
+        fastest = fastest.merge(driver_team, left_on='Driver',
+                                right_on='Abbreviation', how='left')
+
+        # Format lap time
+        def fmt_time(secs):
+            m = int(secs // 60)
+            s = secs % 60
+            return f"{m}:{s:06.3f}"
+
+        fastest['LapTimeStr'] = fastest['LapTimeSec'].apply(fmt_time)
+
+        rows = []
+        for _, row in fastest.iterrows():
+            logo_file = TEAM_LOGOS.get(row['TeamName'], None)
+            team_color = TEAM_COLORS.get(row['TeamName'], '#444')
+            pos = int(row['Pos'])
+            rows.append(html.Tr([
+                html.Td(str(pos), className='pos'),
+                html.Td(
+                    html.Img(src=f'/assets/logos/{logo_file}.avif',
+                             style={'height': '16px', 'width': '28px',
+                                    'objectFit': 'contain'})
+                    if logo_file else html.Div(
+                        style={'width': '4px', 'background': team_color}),
+                    style={'width': '36px', 'padding': '0 4px'},
+                ),
+                html.Td(row['Driver'], className='driver-abbr'),
+                html.Td(row['LapTimeStr'], className='pts'),
+            ], className='p1' if pos == 1 else ''))
+
+        table = html.Div([
+            html.Div(f'{year} — {session.event["EventName"]}',
+                     style={'fontSize': '0.6rem', 'color': '#888',
+                            'letterSpacing': '0.15em', 'textTransform': 'uppercase',
+                            'fontFamily': 'Titillium Web', 'marginBottom': '12px'}),
+            html.Div('Fastest Laps', className='home-section-title',
+                     style={'marginBottom': '8px'}),
+            html.Table([
+                html.Thead(html.Tr([
+                    html.Th('POS'), html.Th(''),
+                    html.Th('DRIVER'), html.Th('FASTEST LAP'),
+                ])),
+                html.Tbody(rows),
+            ], className='champ-table standings-full-table',
+               style={'maxWidth': '500px'}),
+        ])
+
+        return table
+
+    except Exception as e:
+        print(f'Races content error: {e}')
+        return html.Div(f'Error: {e}', className='standings-empty')
