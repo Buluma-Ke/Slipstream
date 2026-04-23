@@ -1,148 +1,60 @@
 from dash import html, dcc
 import dash_bootstrap_components as dbc
+from dash_iconify import DashIconify
 
 
 def layout():
     return html.Div([
 
-        # Selector row
+        # Header row
         html.Div([
+            html.Div('Races', className='home-page-title'),
             html.Div([
-                html.Div('Year', className='selector-label'),
-                dcc.Dropdown(
-                    id='dd-year',
-                    options=[{'label': y, 'value': y} for y in range(2025, 2017, -1)],
-                    value=2023,
-                    clearable=False,
-                ),
-            ], className='selector-col year'),
-            html.Div([
-                html.Div('Event', className='selector-label'),
-                dcc.Dropdown(id='dd-event', clearable=False),
-            ], className='selector-col event'),
-            html.Div([
-                html.Div('Session', className='selector-label'),
-                dcc.Dropdown(
-                    id='dd-session',
-                    options=[
-                        {'label': 'Race',              'value': 'R'},
-                        {'label': 'Qualifying',        'value': 'Q'},
-                        {'label': 'Sprint',            'value': 'S'},
-                        {'label': 'Sprint Qualifying', 'value': 'SQ'},
-                        {'label': 'FP1',               'value': 'FP1'},
-                        {'label': 'FP2',               'value': 'FP2'},
-                        {'label': 'FP3',               'value': 'FP3'},
-                    ],
-                    value='R',
-                    clearable=False,
-                ),
-            ], className='selector-col session'),
-            html.Div([
-                html.Div('\u00a0', className='selector-label'),
-                dbc.Button('LOAD', id='btn-load'),
-            ], className='selector-col btn'),
-            html.Div([
-                html.Div(id='selection-display'),
-                html.Div(id='session-status'),
-                dbc.Alert(
-                    id='session-confirm',
-                    color='success',
-                    is_open=False,
-                    className='mb-0',
-                ),
-            ], className='selector-col status'),
-
-            # Stat pills — right side of selector row
-            html.Div([
-                html.Div(id='stat-fastest', className='stat-pill',
-                         children=[html.Div('Fastest Lap', className='label'),
-                                   html.Div('—', className='value')]),
-                html.Div(id='stat-laps', className='stat-pill',
-                         children=[html.Div('Total Laps', className='label'),
-                                   html.Div('—', className='value')]),
-                html.Div(id='stat-drivers', className='stat-pill',
-                         children=[html.Div('Drivers', className='label'),
-                                   html.Div('—', className='value')]),
-                html.Div(id='stat-team', className='stat-pill',
-                         children=[html.Div('Fastest Team', className='label'),
-                                   html.Div('—', className='value')]),
-            ], style={'display': 'flex', 'marginLeft': 'auto', 'alignItems': 'center'}),
-
-        ], className='selector-row'),
-
-        # Chart tabs
-        dbc.Tabs([
-            dbc.Tab(
-                dcc.Graph(id='chart-lap-dist',
-                          config={'displayModeBar': False},
-                          style={'height': '73vh'}),
-                label='Lap Times',
-            ),
-            dbc.Tab(
-                dcc.Graph(id='chart-strategy',
-                          config={'displayModeBar': False},
-                          style={'height': '73vh'}),
-                label='Strategy',
-            ),
-            dbc.Tab(
+                # Season pill
                 html.Div([
-                    html.Div([
-                        html.Div('Driver A', className='selector-label mt-2'),
-                        dcc.Dropdown(id='dd-delta-a', clearable=False),
-                        html.Div('Driver B', className='selector-label mt-2'),
-                        dcc.Dropdown(id='dd-delta-b', clearable=False),
-                    ], className='tab-sidebar',
-                       style={'width': '140px', 'display': 'inline-block',
-                              'verticalAlign': 'top'}),
-                    html.Div(
-                        dcc.Graph(id='chart-delta',
-                                  config={'displayModeBar': False},
-                                  style={'height': '73vh'}),
-                        style={'display': 'inline-block',
-                               'width': 'calc(100% - 148px)',
-                               'verticalAlign': 'top'}),
-                ]),
-                label='Delta',
-            ),
-            dbc.Tab(
+                    DashIconify(icon='tabler:flag', width=13,
+                                style={'marginRight': '5px', 'color': '#E8002D'}),
+                    html.Span('Season', className='pill-label',
+                              style={'marginBottom': '0', 'marginRight': '6px'}),
+                    html.Span(id='races-pill-year-display', children='2025'),
+                ], className='year-pill-single', id='races-year-pill-toggle'),
+                html.Div(
+                    [html.Div(str(y),
+                              id={'type': 'races-year-pill', 'index': y},
+                              className='year-dropdown-item')
+                     for y in range(2025, 2017, -1)],
+                    id='races-year-pill-dropdown',
+                    className='year-pill-menu',
+                    style={'display': 'none'},
+                ),
+                html.Div(id='races-year-overlay', className='year-pill-overlay',
+                         style={'display': 'none'}, n_clicks=0),
+
+                # Race pill
                 html.Div([
-                    html.Div([
-                        html.Div('Driver', className='selector-label mt-2'),
-                        dcc.Dropdown(id='dd-tel-driver', clearable=False),
-                        html.Div('Lap', className='selector-label mt-2'),
-                        dcc.Dropdown(id='dd-tel-lap', clearable=False),
-                    ], className='tab-sidebar',
-                       style={'width': '140px', 'display': 'inline-block',
-                              'verticalAlign': 'top'}),
-                    html.Div(
-                        dcc.Graph(id='chart-telemetry',
-                                  config={'displayModeBar': False},
-                                  style={'height': '73vh'}),
-                        style={'display': 'inline-block',
-                               'width': 'calc(100% - 148px)',
-                               'verticalAlign': 'top'}),
-                ]),
-                label='Telemetry',
-            ),
-            dbc.Tab(
-                html.Div([
-                    html.Div([
-                        html.Div('Driver', className='selector-label mt-2'),
-                        dcc.Dropdown(id='dd-map-driver', clearable=False),
-                        html.Div('Lap', className='selector-label mt-2'),
-                        dcc.Dropdown(id='dd-map-lap', clearable=False),
-                    ], className='tab-sidebar',
-                       style={'width': '140px', 'display': 'inline-block',
-                              'verticalAlign': 'top'}),
-                    html.Div(
-                        dcc.Graph(id='chart-map',
-                                  config={'displayModeBar': False},
-                                  style={'height': '73vh'}),
-                        style={'display': 'inline-block',
-                               'width': 'calc(100% - 148px)',
-                               'verticalAlign': 'top'}),
-                ]),
-                label='Track Map',
-            ),
-        ]),
-    ])
+                    DashIconify(icon='tabler:steering-wheel', width=13,
+                                style={'marginRight': '5px', 'color': '#E8002D'}),
+                    html.Span('Race', className='pill-label',
+                              style={'marginBottom': '0', 'marginRight': '6px'}),
+                    html.Span(id='races-pill-race-display', children='Select'),
+                ], className='year-pill-single', id='races-race-pill-toggle',
+                   style={'marginLeft': '8px'}),
+                html.Div(
+                    id='races-race-pill-dropdown',
+                    className='year-pill-menu',
+                    style={'display': 'none'},
+                ),
+                html.Div(id='races-race-overlay', className='year-pill-overlay',
+                         style={'display': 'none'}, n_clicks=0),
+
+            ], style={'position': 'relative', 'display': 'flex',
+                      'alignItems': 'center', 'gap': '4px'}),
+        ], className='home-top-row'),
+
+        # Content
+        dcc.Loading(type='circle', color='#E8002D', children=
+            html.Div(id='races-content', className='home-wrapper',
+                     style={'paddingTop': '0'})
+        ),
+
+    ], className='home-wrapper', style={'paddingBottom': '0'})
