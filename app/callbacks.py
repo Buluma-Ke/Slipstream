@@ -1599,7 +1599,7 @@ def update_constructor_standings(year):
 
 
 
-    # ──────────────────── Races page ────────────────────
+# ──────────────────── Races page ────────────────────
 
     
 @callback(
