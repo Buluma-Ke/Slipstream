@@ -14,7 +14,7 @@ def build_layout():
         dcc.Store(id='drv-standings-store-year', data=2025),
         dcc.Store(id='con-standings-store-year', data=2025),
         dcc.Store(id='races-store-year', data=2025),
-        dcc.Store(id='races-store-race', data=None),
+        dcc.Store(id='races-store-race', data=1),
 
         # Sidebar
         build_sidebar(),  

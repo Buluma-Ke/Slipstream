@@ -1658,10 +1658,11 @@ def toggle_races_race(n_clicks, year, current_style):
     schedule = fastf1.get_event_schedule(year, include_testing=False)
     schedule = schedule[schedule['EventFormat'] != 'testing']
     items = [
-        html.Div(row['EventName'],
-                 id={'type': 'races-race-pill', 'index': row['RoundNumber'],
-                     'name': row['EventName']},
-                 className='year-dropdown-item')
+        html.Div(
+            row['EventName'].replace(' Grand Prix', ''),
+            id={'type': 'races-race-pill', 'index': int(row['RoundNumber'])},
+            className='year-dropdown-item'
+        )
         for _, row in schedule.iterrows()
     ]
     return items, {'display': 'block'}, {'display': 'block'}
@@ -1672,18 +1673,20 @@ def toggle_races_race(n_clicks, year, current_style):
     Output('races-pill-race-display', 'children'),
     Output('races-race-pill-dropdown', 'style', allow_duplicate=True),
     Output('races-race-overlay', 'style', allow_duplicate=True),
-    Input({'type': 'races-race-pill', 'index': ALL, 'name': ALL}, 'n_clicks'),
-    State({'type': 'races-race-pill', 'index': ALL, 'name': ALL}, 'id'),
+    Input({'type': 'races-race-pill', 'index': ALL}, 'n_clicks'),
+    State({'type': 'races-race-pill', 'index': ALL}, 'id'),
     prevent_initial_call=True,
 )
 def select_races_race(n_clicks, ids):
     from dash import ctx
     triggered = ctx.triggered_id
-    if not triggered:
+    if not triggered or not any(n for n in n_clicks if n):
         return no_update, no_update, {'display': 'none'}, {'display': 'none'}
-    name = triggered['name'].replace(' Grand Prix', '')
-    return triggered['index'], name, {'display': 'none'}, {'display': 'none'}
-
+    selected = triggered['index']
+    # Get name from the children
+    triggered_idx = next(i for i, id_ in enumerate(ids) 
+                        if id_['index'] == selected)
+    return selected, str(selected), {'display': 'none'}, {'display': 'none'}
 
 @callback(
     Output('races-race-pill-dropdown', 'style', allow_duplicate=True),
@@ -1703,10 +1706,14 @@ def close_races_race_dropdown(n_clicks):
 def update_races_content(round_number, year):
     import plotly.graph_objects as go
 
-    if not round_number or not year:
+    if not year:
         return html.Div('Select a season and race to begin.',
                         style={'color': '#555', 'fontFamily': 'Titillium Web',
                                'fontSize': '0.8rem', 'padding': '20px'})
+    
+    if not round_number:
+        round_number = 1
+
     try:
         session = fastf1.get_session(year, round_number, 'R')
         session.load(telemetry=False, weather=False, messages=False)
