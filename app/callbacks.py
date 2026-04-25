@@ -1,8 +1,9 @@
+import fastf1
 import pandas as pd
-from dash import Input, Output, State, callback, no_update, html, ALL
 from data.loader import get_session, get_laps
 from data.store import save_laps, query_laps
-import fastf1
+from dash.exceptions import PreventUpdate
+from dash import Input, Output, State, callback, no_update, html, ALL
 
 
 
@@ -1668,25 +1669,46 @@ def toggle_races_race(n_clicks, year, current_style):
     return items, {'display': 'block'}, {'display': 'block'}
 
 
+# @callback(
+#     Output('races-store-race', 'data'),
+#     Output('races-pill-race-display', 'children'),
+#     Output('races-race-pill-dropdown', 'style', allow_duplicate=True),
+#     Output('races-race-overlay', 'style', allow_duplicate=True),
+#     Input({'type': 'races-race-pill', 'index': ALL}, 'n_clicks'),
+#     State({'type': 'races-race-pill', 'index': ALL}, 'id'),
+#     prevent_initial_call=True,
+# )
+# def select_races_race(n_clicks, ids):
+#     from dash import ctx
+    
+#     # Check if the callback was triggered by a specific button click
+#     if not ctx.triggered or not isinstance(ctx.triggered_id, dict):
+#         return no_update, no_update, no_update, no_update
+
+#     triggered_id = ctx.triggered_id
+#     selected_index = triggered_id['index']
+    
+#     # Find the label for the selected index
+#     # (Using the year/schedule might be safer than relying on IDs)
+#     return selected_index, f"Round {selected_index}", {'display': 'none'}, {'display': 'none'}
+
+
 @callback(
     Output('races-store-race', 'data'),
     Output('races-pill-race-display', 'children'),
     Output('races-race-pill-dropdown', 'style', allow_duplicate=True),
     Output('races-race-overlay', 'style', allow_duplicate=True),
     Input({'type': 'races-race-pill', 'index': ALL}, 'n_clicks'),
-    State({'type': 'races-race-pill', 'index': ALL}, 'id'),
     prevent_initial_call=True,
 )
-def select_races_race(n_clicks, ids):
+def select_races_race(n_clicks):
     from dash import ctx
-    triggered = ctx.triggered_id
-    if not triggered or not any(n for n in n_clicks if n):
-        return no_update, no_update, {'display': 'none'}, {'display': 'none'}
-    selected = triggered['index']
-    # Get name from the children
-    triggered_idx = next(i for i, id_ in enumerate(ids) 
-                        if id_['index'] == selected)
-    return selected, str(selected), {'display': 'none'}, {'display': 'none'}
+    # If no button in the pattern-match was actually clicked, don't close the menu
+    if not ctx.triggered_id or all(n is None for n in n_clicks):
+        raise PreventUpdate
+
+    selected = ctx.triggered_id['index']
+    return selected, f"Round {selected}", {'display': 'none'}, {'display': 'none'}
 
 @callback(
     Output('races-race-pill-dropdown', 'style', allow_duplicate=True),
