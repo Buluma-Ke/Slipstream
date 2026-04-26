@@ -1817,9 +1817,13 @@ def update_races_content(round_number, year):
 
         clean_laps = laps[
             laps['PitInTime'].isna() &
-            (laps['LapTimeSec'] < median_lap * 1.05) &
+            (laps['LapTimeSec'] < median_lap * 1.15) &
             (laps['LapNumber'] > 1)
         ]
+
+        early = laps[laps['LapNumber'] <= 10][['Driver', 'LapNumber', 'LapTimeSec', 'PitInTime', 'PitOutTime']].sort_values('LapNumber')
+        print(early.to_string())
+        print(f"Median: {median_lap}, Threshold: {median_lap * 1.05}")
 
         for drv in drivers:
             drv_laps = clean_laps[clean_laps['Driver'] == drv]\
