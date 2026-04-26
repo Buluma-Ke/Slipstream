@@ -1722,17 +1722,29 @@ def close_races_race_dropdown(n_clicks):
 
 @callback(
     Output('races-content', 'children'),
+    Output('races-pace-evolution', 'figure'),
     Input('races-store-race', 'data'),
-    State('races-store-year', 'data'),
+    Input('races-store-year', 'data'),
 )
 def update_races_content(round_number, year):
     import plotly.graph_objects as go
 
+    TRANSPARENT = dict(
+        plot_bgcolor='rgba(0,0,0,0)',
+        paper_bgcolor='rgba(0,0,0,0)',
+        font=dict(color='#FBF9E4', family='Titillium Web'),
+    )
+    AXIS = dict(
+        gridcolor='rgba(0,0,0,0)',
+        title='',
+        showline=False,
+        zeroline=False,
+        tickfont=dict(color='#444'),
+    )
+    empty = go.Figure().update_layout(**TRANSPARENT)
+
     if not year:
-        return html.Div('Select a season and race to begin.',
-                        style={'color': '#555', 'fontFamily': 'Titillium Web',
-                               'fontSize': '0.8rem', 'padding': '20px'})
-    
+        return html.Div('Select a season.'), empty
     if not round_number:
         round_number = 1
 
@@ -1741,23 +1753,18 @@ def update_races_content(round_number, year):
         session.load(telemetry=False, weather=False, messages=False)
 
         results = session.results
-        if results is None or len(results) == 0:
-            return html.Div('No data for this session.')
-
-        # ── Top 20 fastest laps ──
         laps = session.laps.copy()
         laps = laps.dropna(subset=['LapTime'])
         laps['LapTimeSec'] = laps['LapTime'].dt.total_seconds()
+
+        # ── Fastest laps table ──
         fastest = laps.groupby('Driver')['LapTimeSec'].min().reset_index()
         fastest = fastest.sort_values('LapTimeSec').head(20)
         fastest['Pos'] = range(1, len(fastest) + 1)
-
-        # Merge team info
         driver_team = results[['Abbreviation', 'TeamName']].copy()
         fastest = fastest.merge(driver_team, left_on='Driver',
                                 right_on='Abbreviation', how='left')
 
-        # Format lap time
         def fmt_time(secs):
             m = int(secs // 60)
             s = secs % 60
@@ -1797,12 +1804,67 @@ def update_races_content(round_number, year):
                     html.Th('DRIVER'), html.Th('FASTEST LAP'),
                 ])),
                 html.Tbody(rows),
-            ], className='champ-table standings-full-table',
-               style={'maxWidth': '500px'}),
+            ], className='champ-table standings-full-table'),
         ])
 
-        return table
+        # ── Race pace evolution ──
+        fig = go.Figure()
+        drivers = laps['Driver'].unique()
+
+        # Filter out slow laps — pit laps, SC laps
+        fastest_lap_time = laps['LapTimeSec'].min()
+        clean_laps = laps[laps['LapTimeSec'] < fastest_lap_time * 1.07]
+
+        for drv in drivers:
+            drv_laps = clean_laps[clean_laps['Driver'] == drv]\
+                .sort_values('LapNumber')
+            if len(drv_laps) == 0:
+                continue
+            team = drv_laps.iloc[0].get('Team', '')
+            color = TEAM_COLORS.get(team, '#444')
+
+            # Format y-axis as MM:SS.mmm
+            y_vals = drv_laps['LapTimeSec'].tolist()
+            x_vals = drv_laps['LapNumber'].tolist()
+
+            fig.add_trace(go.Scatter(
+                x=x_vals,
+                y=y_vals,
+                name=drv,
+                line=dict(color=color, width=1.2),
+                mode='lines+markers',
+                marker=dict(size=3),
+                hovertemplate=f'<b>{drv}</b><br>Lap %{{x}}<br>%{{text}}<extra></extra>',
+                text=[fmt_time(t) for t in y_vals],
+            ))
+
+        # Format y-axis ticks as MM:SS
+        min_time = clean_laps['LapTimeSec'].min() if len(clean_laps) > 0 else 60
+        max_time = clean_laps['LapTimeSec'].max() if len(clean_laps) > 0 else 120
+
+        tick_vals = [min_time + i * 2 for i in range(
+            int((max_time - min_time) / 2) + 2)]
+        tick_text = [fmt_time(t) for t in tick_vals]
+
+        fig.update_layout(
+            **TRANSPARENT,
+            autosize=True,
+            title=dict(text='Race Pace Evolution',
+                       font=dict(color='#444', size=13)),
+            xaxis=dict(**AXIS, title='Lap'),
+            yaxis=dict(
+                **AXIS,
+                tickvals=tick_vals,
+                ticktext=tick_text,
+                autorange=True,
+            ),
+            showlegend=False,
+            margin=dict(l=80, r=20, t=40, b=20),
+        )
+
+        return table, fig
 
     except Exception as e:
         print(f'Races content error: {e}')
-        return html.Div(f'Error: {e}', className='standings-empty')
+        err = html.Div(f'Error: {e}', className='standings-empty')
+        return err, empty

@@ -1,5 +1,4 @@
 from dash import html, dcc
-import dash_bootstrap_components as dbc
 from dash_iconify import DashIconify
 
 
@@ -10,7 +9,6 @@ def layout():
         html.Div([
             html.Div('Races', className='home-page-title'),
             html.Div([
-                # Season pill
                 html.Div([
                     DashIconify(icon='tabler:flag', width=13,
                                 style={'marginRight': '5px', 'color': '#E8002D'}),
@@ -30,7 +28,6 @@ def layout():
                 html.Div(id='races-year-overlay', className='year-pill-overlay',
                          style={'display': 'none'}, n_clicks=0),
 
-                # Race pill
                 html.Div([
                     DashIconify(icon='tabler:steering-wheel', width=13,
                                 style={'marginRight': '5px', 'color': '#E8002D'}),
@@ -51,10 +48,22 @@ def layout():
                       'alignItems': 'center', 'gap': '4px'}),
         ], className='home-top-row'),
 
-        # Content
+        # Two column layout
         dcc.Loading(type='circle', color='#E8002D', children=
-            html.Div(id='races-content', className='home-wrapper',
-                     style={'paddingTop': '0'})
+            html.Div([
+                # Left — fastest laps table
+                html.Div(
+                    html.Div(id='races-content'),
+                    className='drv-left',
+                ),
+                # Right — race pace evolution
+                html.Div(
+                    dcc.Graph(id='races-pace-evolution',
+                              config={'displayModeBar': False, 'responsive': True},
+                              style={'height': '85vh', 'width': '100%'}),
+                    className='drv-right',
+                ),
+            ], className='drv-standings-layout'),
         ),
 
     ], className='home-wrapper', style={'paddingBottom': '0'})
