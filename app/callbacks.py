@@ -1811,9 +1811,15 @@ def update_races_content(round_number, year):
         fig = go.Figure()
         drivers = laps['Driver'].unique()
 
-        # Filter out slow laps — pit laps, SC laps
+        # median-based filter — more robust against red flag anomalies
+        median_lap = laps['LapTimeSec'].median()
         fastest_lap_time = laps['LapTimeSec'].min()
-        clean_laps = laps[laps['LapTimeSec'] < fastest_lap_time * 1.07]
+
+        clean_laps = laps[
+            laps['PitInTime'].isna() &
+            (laps['LapTimeSec'] < median_lap * 1.05) &
+            (laps['LapNumber'] > 1)
+        ]
 
         for drv in drivers:
             drv_laps = clean_laps[clean_laps['Driver'] == drv]\
@@ -1857,6 +1863,7 @@ def update_races_content(round_number, year):
                 showline=False,
                 zeroline=False,
                 tickfont=dict(color='#444'),
+                range=[1, laps['LapNumber'].max() + 1],
             ),
             yaxis=dict(
                 gridcolor='rgba(0,0,0,0)',
