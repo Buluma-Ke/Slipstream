@@ -65,5 +65,8 @@ def layout():
                 ),
             ], className='drv-standings-layout'),
         ),
+        dcc.Graph(id='races-pace-boxplot',
+            config={'displayModeBar': False, 'responsive': True},
+            style={'height': '400px', 'width': '100%', 'marginTop': '8px'}),
 
     ], className='home-wrapper', style={'paddingBottom': '0'})

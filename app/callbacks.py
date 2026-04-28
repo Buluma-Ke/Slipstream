@@ -1723,6 +1723,7 @@ def close_races_race_dropdown(n_clicks):
 @callback(
     Output('races-content', 'children'),
     Output('races-pace-evolution', 'figure'),
+    Output('races-pace-boxplot', 'figure'),
     Input('races-store-race', 'data'),
     Input('races-store-year', 'data'),
 )
@@ -1744,7 +1745,7 @@ def update_races_content(round_number, year):
     empty = go.Figure().update_layout(**TRANSPARENT)
 
     if not year:
-        return html.Div('Select a season.'), empty
+        return html.Div('Select a season.'), empty, empty
     if not round_number:
         round_number = 1
 
@@ -1883,9 +1884,93 @@ def update_races_content(round_number, year):
             margin=dict(l=80, r=20, t=40, b=20),
         )
 
-        return table, fig
+
+        # ── Race pace box plot ──
+        fig_box = go.Figure()
+
+        driver_order = clean_laps.groupby('Driver')['LapTimeSec']\
+            .median().sort_values().index.tolist()
+
+        for drv in driver_order:
+            drv_laps = clean_laps[clean_laps['Driver'] == drv]['LapTimeSec']
+            if len(drv_laps) == 0:
+                continue
+            team = clean_laps[clean_laps['Driver'] == drv].iloc[0].get('Team', '')
+            color = TEAM_COLORS.get(team, '#444')
+
+            # Format ticks
+            tick_vals_box = list(range(
+                int(clean_laps['LapTimeSec'].min()) - 1,
+                int(clean_laps['LapTimeSec'].max()) + 2
+            ))
+            tick_text_box = [fmt_time(t) for t in tick_vals_box]
+
+            fig_box.add_trace(go.Box(
+                y=drv_laps.tolist(),
+                name=drv,
+                marker_color=color,
+                line_color=color,
+                fillcolor=color + '44',
+                boxpoints=False,
+                showlegend=False,
+            ))
+
+            # ── Race pace box plot ──
+            fig_box = go.Figure()
+
+            driver_order = clean_laps.groupby('Driver')['LapTimeSec']\
+                .median().sort_values().index.tolist()
+
+            for drv in driver_order:
+                drv_laps = clean_laps[clean_laps['Driver'] == drv]['LapTimeSec']
+                if len(drv_laps) == 0:
+                    continue
+                team = clean_laps[clean_laps['Driver'] == drv].iloc[0].get('Team', '')
+                color = TEAM_COLORS.get(team, '#444')
+
+                # Format ticks
+                tick_vals_box = list(range(
+                    int(clean_laps['LapTimeSec'].min()) - 1,
+                    int(clean_laps['LapTimeSec'].max()) + 2
+                ))
+                tick_text_box = [fmt_time(t) for t in tick_vals_box]
+
+                fig_box.add_trace(go.Box(
+                    y=drv_laps.tolist(),
+                    name=drv,
+                    marker_color=color,
+                    line_color=color,
+                    fillcolor=color + '44',
+                    boxpoints=False,
+                    showlegend=False,
+                ))
+
+                fig_box.update_layout(
+                    **TRANSPARENT,
+                    autosize=True,
+                    title=dict(text='Race Pace', font=dict(color='#444', size=13)),
+                    xaxis=dict(
+                        gridcolor='rgba(0,0,0,0)',
+                        title='',
+                        showline=False,
+                        zeroline=False,
+                        tickfont=dict(color='#888', size=10),
+                    ),
+                    yaxis=dict(
+                        gridcolor='rgba(0,0,0,0)',
+                        title='',
+                        showline=False,
+                        zeroline=False,
+                        tickfont=dict(color='#444'),
+                        tickvals=tick_vals_box,
+                        ticktext=tick_text_box,
+                    ),
+                    margin=dict(l=80, r=20, t=40, b=20),
+                )
+
+        return table, fig, fig_box
 
     except Exception as e:
         print(f'Races content error: {e}')
         err = html.Div(f'Error: {e}', className='standings-empty')
-        return err, empty
+        return err, empty, empty
