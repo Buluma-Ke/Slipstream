@@ -1724,6 +1724,7 @@ def close_races_race_dropdown(n_clicks):
     Output('races-content', 'children'),
     Output('races-pace-evolution', 'figure'),
     Output('races-pace-boxplot', 'figure'),
+    Output('races-lap-times-strip', 'figure'),
     Input('races-store-race', 'data'),
     Input('races-store-year', 'data'),
 )
@@ -1745,7 +1746,7 @@ def update_races_content(round_number, year):
     empty = go.Figure().update_layout(**TRANSPARENT)
 
     if not year:
-        return html.Div('Select a season.'), empty, empty
+        return html.Div('Select a season.'), empty, empty, empty
     if not round_number:
         round_number = 1
 
@@ -1987,10 +1988,57 @@ def update_races_content(round_number, year):
                     ),
                     margin=dict(l=80, r=20, t=40, b=20),
                 )
+            # ── Lap times strip plot ──
+            fig_strip = go.Figure()
 
-        return table, fig, fig_box
+            for drv in driver_order:
+                drv_laps = clean_laps[clean_laps['Driver'] == drv]
+                if len(drv_laps) == 0:
+                    continue
+                team = drv_laps.iloc[0].get('Team', '')
+                color = TEAM_COLORS.get(team, '#444')
+
+                fig_strip.add_trace(go.Scatter(
+                    x=[drv] * len(drv_laps),
+                    y=drv_laps['LapTimeSec'].tolist(),
+                    mode='markers',
+                    name=drv,
+                    marker=dict(
+                        color=color,
+                        size=6,
+                        opacity=0.7,
+                    ),
+                    showlegend=False,
+                    hovertemplate=f'<b>{drv}</b><br>%{{text}}<extra></extra>',
+                    text=[fmt_time(t) for t in drv_laps['LapTimeSec'].tolist()],
+                ))
+
+            fig_strip.update_layout(
+                **TRANSPARENT,
+                autosize=True,
+                title=dict(text='Lap Times', font=dict(color='#444', size=13)),
+                xaxis=dict(
+                    gridcolor='rgba(0,0,0,0)',
+                    title='',
+                    showline=False,
+                    zeroline=False,
+                    tickfont=dict(color='#888', size=10),
+                ),
+                yaxis=dict(
+                    gridcolor='rgba(0,0,0,0)',
+                    title='',
+                    showline=False,
+                    zeroline=False,
+                    tickfont=dict(color='#444'),
+                    tickvals=tick_vals_box,
+                    ticktext=tick_text_box,
+                ),
+                margin=dict(l=80, r=20, t=40, b=20),
+            )
+
+        return table, fig, fig_box, fig_strip
 
     except Exception as e:
         print(f'Races content error: {e}')
         err = html.Div(f'Error: {e}', className='standings-empty')
-        return err, empty, empty
+        return err, empty, empty, empty
