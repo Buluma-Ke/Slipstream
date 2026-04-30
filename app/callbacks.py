@@ -1886,6 +1886,25 @@ def update_races_content(round_number, year):
 
 
         # ── Race pace box plot ──
+        import plotly.colors
+
+        def hex_to_rgba(hex_color, alpha=0.3):
+            # Check if hex_color is None, empty, or not a string
+            if not hex_color or not isinstance(hex_color, str):
+                return f'rgba(128,128,128,{alpha})'  # Return a default grey
+                
+            hex_color = hex_color.lstrip('#')
+            
+            # Ensure we have a valid hex length (6 chars)
+            if len(hex_color) != 6:
+                return f'rgba(128,128,128,{alpha})'
+
+            try:
+                r, g, b = tuple(int(hex_color[i:i+2], 16) for i in (0, 2, 4))
+                return f'rgba({r},{g},{b},{alpha})'
+            except ValueError:
+                return f'rgba(128,128,128,{alpha})'
+        
         fig_box = go.Figure()
 
         driver_order = clean_laps.groupby('Driver')['LapTimeSec']\
@@ -1910,7 +1929,7 @@ def update_races_content(round_number, year):
                 name=drv,
                 marker_color=color,
                 line_color=color,
-                fillcolor=color + '44',
+                fillcolor=hex_to_rgba(color, 0.3),
                 boxpoints=False,
                 showlegend=False,
             ))
@@ -1925,6 +1944,7 @@ def update_races_content(round_number, year):
                 drv_laps = clean_laps[clean_laps['Driver'] == drv]['LapTimeSec']
                 if len(drv_laps) == 0:
                     continue
+
                 team = clean_laps[clean_laps['Driver'] == drv].iloc[0].get('Team', '')
                 color = TEAM_COLORS.get(team, '#444')
 
@@ -1940,7 +1960,7 @@ def update_races_content(round_number, year):
                     name=drv,
                     marker_color=color,
                     line_color=color,
-                    fillcolor=color + '44',
+                    fillcolor=hex_to_rgba(color, 0.3),
                     boxpoints=False,
                     showlegend=False,
                 ))
