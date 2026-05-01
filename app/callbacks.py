@@ -1725,6 +1725,7 @@ def close_races_race_dropdown(n_clicks):
     Output('races-pace-evolution', 'figure'),
     Output('races-pace-boxplot', 'figure'),
     Output('races-lap-times-strip', 'figure'),
+    #Output('point-evolution-lap-times', 'figure'),
     Input('races-store-race', 'data'),
     Input('races-store-year', 'data'),
 )
@@ -2035,6 +2036,11 @@ def update_races_content(round_number, year):
                 ),
                 margin=dict(l=80, r=20, t=40, b=20),
             )
+        
+        # -- Ranking Evolution --
+        #figure = go.Figure()
+
+        #valid_drivers = set(driver_standings['Abbreviation'])
 
         return table, fig, fig_box, fig_strip
 

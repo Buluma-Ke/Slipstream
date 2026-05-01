@@ -71,5 +71,8 @@ def layout():
         dcc.Graph(id='races-lap-times-strip',
             config={'displayModeBar': False, 'responsive': True},
             style={'height': '400px', 'width': '100%', 'marginTop': '8px'}),
+        dcc.Graph(id='point-evolution-lap-times',
+            config={'displayModeBar': False, 'responsive': True},
+            style={'height': '400px', 'width': '100%', 'marginTop': '8px'}),
 
     ], className='home-wrapper', style={'paddingBottom': '0'})
