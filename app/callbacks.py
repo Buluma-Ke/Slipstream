@@ -1725,10 +1725,12 @@ def close_races_race_dropdown(n_clicks):
     Output('races-pace-evolution', 'figure'),
     Output('races-pace-boxplot', 'figure'),
     Output('races-lap-times-strip', 'figure'),
-    #Output('point-evolution-lap-times', 'figure'),
+    Output('races-position-evolution', 'figure'),
     Input('races-store-race', 'data'),
     Input('races-store-year', 'data'),
 )
+
+
 def update_races_content(round_number, year):
     import plotly.graph_objects as go
 
@@ -1747,7 +1749,7 @@ def update_races_content(round_number, year):
     empty = go.Figure().update_layout(**TRANSPARENT)
 
     if not year:
-        return html.Div('Select a season.'), empty, empty, empty
+        return html.Div('Select a season.'), empty, empty, empty, empty
     if not round_number:
         round_number = 1
 
@@ -2037,14 +2039,74 @@ def update_races_content(round_number, year):
                 margin=dict(l=80, r=20, t=40, b=20),
             )
         
-        # -- Ranking Evolution --
-        #figure = go.Figure()
+        # ── Position evolution ──
+        fig_pos = go.Figure()
 
-        #valid_drivers = set(driver_standings['Abbreviation'])
+        pos_laps = laps.dropna(subset=['Position']).copy()
+        pos_laps['Position'] = pos_laps['Position'].astype(int)
+        all_lap_nums = sorted(pos_laps['LapNumber'].unique())
+        drivers_pos = pos_laps['Driver'].unique()
 
-        return table, fig, fig_box, fig_strip
+        for drv in drivers_pos:
+            drv_data = pos_laps[pos_laps['Driver'] == drv].sort_values('LapNumber')
+            if len(drv_data) == 0:
+                continue
+            team = drv_data.iloc[0].get('Team', '')
+            color = TEAM_COLORS.get(team, '#444')
+            final_pos = int(drv_data.iloc[-1]['Position'])
+
+            fig_pos.add_trace(go.Scatter(
+                x=drv_data['LapNumber'].tolist(),
+                y=drv_data['Position'].tolist(),
+                name=drv,
+                line=dict(color=color, width=1.5, shape='hv'),
+                mode='lines+markers',
+                marker=dict(size=3),
+                showlegend=False,
+            ))
+            fig_pos.add_annotation(
+                x=drv_data['LapNumber'].max(),
+                y=final_pos,
+                text=drv,
+                xanchor='left',
+                showarrow=False,
+                font=dict(color=color, size=9, family='Titillium Web'),
+                xshift=6,
+            )
+
+        max_pos = int(pos_laps['Position'].max())
+
+        fig_pos.update_layout(
+            **TRANSPARENT,
+            autosize=True,
+            title=dict(text='Position Evolution', font=dict(color='#444', size=13)),
+            xaxis=dict(
+                gridcolor='rgba(0,0,0,0)',
+                title='',
+                showline=False,
+                zeroline=False,
+                tickfont=dict(color='#444'),
+                range=[1, pos_laps['LapNumber'].max() + 1],
+            ),
+            yaxis=dict(
+                gridcolor='rgba(0,0,0,0)',
+                title='',
+                showline=False,
+                zeroline=False,
+                tickfont=dict(color='#444'),
+                autorange=False,
+                range=[max_pos + 0.3, 0.7],
+                dtick=1,
+                tick0=1,
+                tickmode='linear',
+            ),
+            showlegend=False,
+            margin=dict(l=40, r=60, t=40, b=20),
+        )
+
+        return table, fig, fig_box, fig_strip, fig_pos
 
     except Exception as e:
         print(f'Races content error: {e}')
         err = html.Div(f'Error: {e}', className='standings-empty')
-        return err, empty, empty, empty
+        return err, empty, empty, empty, empty
