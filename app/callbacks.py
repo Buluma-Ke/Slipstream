@@ -1726,6 +1726,7 @@ def close_races_race_dropdown(n_clicks):
     Output('races-pace-boxplot', 'figure'),
     Output('races-lap-times-strip', 'figure'),
     Output('races-position-evolution', 'figure'),
+    Output('races-speed-heatmap', 'figure'),
     Input('races-store-race', 'data'),
     Input('races-store-year', 'data'),
 )
@@ -2046,6 +2047,8 @@ def update_races_content(round_number, year):
         pos_laps['Position'] = pos_laps['Position'].astype(int)
         all_lap_nums = sorted(pos_laps['LapNumber'].unique())
         drivers_pos = pos_laps['Driver'].unique()
+        total_max_laps = pos_laps['LapNumber'].max()
+        pos_counts = {}
 
         for drv in drivers_pos:
             drv_data = pos_laps[pos_laps['Driver'] == drv].sort_values('LapNumber')
@@ -2055,18 +2058,22 @@ def update_races_content(round_number, year):
             color = TEAM_COLORS.get(team, '#444')
             final_pos = int(drv_data.iloc[-1]['Position'])
 
+            # Check if we've already put a name at this Y level
+            offset = pos_counts.get(final_pos, 0)
+            pos_counts[final_pos] = offset + 1
+
             fig_pos.add_trace(go.Scatter(
                 x=drv_data['LapNumber'].tolist(),
                 y=drv_data['Position'].tolist(),
                 name=drv,
-                line=dict(color=color, width=1.5, shape='hv'),
+                line=dict(color=color, width=1.5, shape='spline', smoothing=0.9),
                 mode='lines+markers',
-                marker=dict(size=3),
+                marker=dict(size=2),
                 showlegend=False,
             ))
             fig_pos.add_annotation(
-                x=drv_data['LapNumber'].max(),
-                y=final_pos,
+                x = total_max_laps,
+                y = final_pos + (offset * 0.3),
                 text=drv,
                 xanchor='left',
                 showarrow=False,
@@ -2104,9 +2111,60 @@ def update_races_content(round_number, year):
             margin=dict(l=40, r=60, t=40, b=20),
         )
 
-        return table, fig, fig_box, fig_strip, fig_pos
+        # ── Top Speed Traps Heatmap ──
+        speed_data = laps.dropna(subset=['SpeedST']).copy()
+        if len(speed_data) > 0:
+            speed_data['SpeedST'] = speed_data['SpeedST'].astype(int)
+            
+            # Create Matrix: Driver x Lap
+            speed_pivot = speed_data.pivot(index='Driver', columns='LapNumber', values='SpeedST')
+            
+            # Sort by highest average speed
+            avg_speeds = speed_pivot.mean(axis=1).sort_values(ascending=False)
+            speed_pivot = speed_pivot.reindex(avg_speeds.index)
+            
+            # Limit to top 15 drivers if list is too long, or keep all
+            # speed_pivot = speed_pivot.head(15) 
+
+            fig_heatmap = go.Figure(data=go.Heatmap(
+                z=speed_pivot.values,
+                x=speed_pivot.columns,
+                y=speed_pivot.index,
+                colorscale='Reds',
+                showscale=False, # Hide scale to match your reference image
+                text=speed_pivot.values,
+                texttemplate="%{text}",
+                textfont={"size": 9, "family": "Titillium Web"},
+                hoverongaps=False,
+                xgap=1,
+                ygap=1
+            ))
+
+            fig_heatmap.update_layout(
+                **TRANSPARENT,
+                title=dict(text='Top Speed Traps per Driver (km/h)', font=dict(color='#444', size=13)),
+                xaxis=dict(
+                    title='Lap Number', 
+                    side='top', 
+                    dtick=5,
+                    gridcolor='rgba(0,0,0,0)',
+                    tickfont=dict(color='#444')
+                ),
+                yaxis=dict(
+                    title='', 
+                    autorange='reversed',
+                    gridcolor='rgba(0,0,0,0)',
+                    tickfont=dict(color='#FBF9E4')
+                ),
+                margin=dict(l=50, r=20, t=80, b=20),
+            )
+        else:
+            fig_heatmap = empty
+
+
+        return table, fig, fig_box, fig_strip, fig_pos, fig_heatmap
 
     except Exception as e:
         print(f'Races content error: {e}')
         err = html.Div(f'Error: {e}', className='standings-empty')
-        return err, empty, empty, empty, empty
+        return err, empty, empty, empty, empty, empty

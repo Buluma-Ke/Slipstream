@@ -74,5 +74,8 @@ def layout():
         dcc.Graph(id='races-position-evolution',
             config={'displayModeBar': False, 'responsive': True},
             style={'height': '500px', 'width': '100%', 'marginTop': '8px'}),
+        dcc.Graph(id='races-speed-heatmap',
+            config={'displayModeBar': False, 'responsive': True},
+            style={'height': '600px', 'width': '100%', 'marginTop': '15px'}),
 
     ], className='home-wrapper', style={'paddingBottom': '0'})
