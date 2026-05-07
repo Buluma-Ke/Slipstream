@@ -2111,7 +2111,7 @@ def update_races_content(round_number, year):
             margin=dict(l=40, r=60, t=40, b=20),
         )
 
-        # ── All Drivers: Top 15 Individual Speed Traps ──
+        # ── All Drivers: Top 20 Individual Speed Traps ──
         speed_data = laps.dropna(subset=['SpeedST']).copy()
         if len(speed_data) > 0:
             speed_data['SpeedST'] = speed_data['SpeedST'].astype(int)
@@ -2122,7 +2122,7 @@ def update_races_content(round_number, year):
             )
             
             # Filter to only keep the top 15 for everyone
-            top_15_speeds = speed_data[speed_data['SpeedRank'] <= 15].copy()
+            top_15_speeds = speed_data[speed_data['SpeedRank'] <= 20].copy()
             
             # Pivot using 'SpeedRank' as the columns instead of 'LapNumber'
             # This aligns all fastest speeds to the left of the graph
@@ -2148,7 +2148,7 @@ def update_races_content(round_number, year):
 
             fig_heatmap.update_layout(
                 **TRANSPARENT,
-                title=dict(text='Top 15 Speed Trap Speeds per Driver (km/h)', font=dict(color='#444', size=13)),
+                title=dict(text='Top 20 Speed Trap Speeds per Driver (km/h)', font=dict(color='#444', size=13)),
                 xaxis=dict(
                     visible=False # Get rid of x-axis as requested
                 ),
@@ -2156,14 +2156,15 @@ def update_races_content(round_number, year):
                     title='', 
                     autorange='reversed',
                     gridcolor='rgba(0,0,0,0)',
-                    tickfont=dict(color='#FBF9E4', size=11)
+                    tickfont=dict(color='#444', size=10)
                 ),
-                margin=dict(l=60, r=20, t=40, b=10),
-                height=700 # Increased height to accommodate all drivers
+                margin=dict(l=50, r=10, t=30, b=10), # Tightened margins
+                height=500,  # Vertical size (reduce from 700 to 500)
+                width=800,   # Horizontal size (explicitly set width)
             )
         else:
             fig_heatmap = empty
-            
+
         return table, fig, fig_box, fig_strip, fig_pos, fig_heatmap
 
     except Exception as e:
