@@ -2146,6 +2146,7 @@ def update_races_content(round_number, year):
                 ygap=1
             ))
 
+
             fig_heatmap.update_layout(
                 **TRANSPARENT,
                 title=dict(text='Top 20 Speed Trap Speeds per Driver (km/h)', font=dict(color='#444', size=13)),
