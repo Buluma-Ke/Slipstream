@@ -2111,30 +2111,36 @@ def update_races_content(round_number, year):
             margin=dict(l=40, r=60, t=40, b=20),
         )
 
-        # ── Top Speed Traps Heatmap ──
+        # ── All Drivers: Top 15 Individual Speed Traps ──
         speed_data = laps.dropna(subset=['SpeedST']).copy()
         if len(speed_data) > 0:
             speed_data['SpeedST'] = speed_data['SpeedST'].astype(int)
             
-            # Create Matrix: Driver x Lap
-            speed_pivot = speed_data.pivot(index='Driver', columns='LapNumber', values='SpeedST')
+            # Rank speeds for EACH driver individually (1 = fastest)
+            speed_data['SpeedRank'] = speed_data.groupby('Driver')['SpeedST'].rank(
+                method='first', ascending=False
+            )
             
-            # Sort by highest average speed
-            avg_speeds = speed_pivot.mean(axis=1).sort_values(ascending=False)
-            speed_pivot = speed_pivot.reindex(avg_speeds.index)
+            # Filter to only keep the top 15 for everyone
+            top_15_speeds = speed_data[speed_data['SpeedRank'] <= 15].copy()
             
-            # Limit to top 15 drivers if list is too long, or keep all
-            # speed_pivot = speed_pivot.head(15) 
+            # Pivot using 'SpeedRank' as the columns instead of 'LapNumber'
+            # This aligns all fastest speeds to the left of the graph
+            speed_pivot = top_15_speeds.pivot(index='Driver', columns='SpeedRank', values='SpeedST')
+            
+            # Sort the Y-axis (Drivers) by their absolute fastest single lap
+            driver_best = speed_pivot[1.0].sort_values(ascending=False)
+            speed_pivot = speed_pivot.reindex(driver_best.index)
 
             fig_heatmap = go.Figure(data=go.Heatmap(
                 z=speed_pivot.values,
                 x=speed_pivot.columns,
                 y=speed_pivot.index,
                 colorscale='Reds',
-                showscale=False, # Hide scale to match your reference image
+                showscale=False,
                 text=speed_pivot.values,
                 texttemplate="%{text}",
-                textfont={"size": 9, "family": "Titillium Web"},
+                textfont={"size": 10, "family": "Titillium Web"},
                 hoverongaps=False,
                 xgap=1,
                 ygap=1
@@ -2142,26 +2148,22 @@ def update_races_content(round_number, year):
 
             fig_heatmap.update_layout(
                 **TRANSPARENT,
-                title=dict(text='Top Speed Traps per Driver (km/h)', font=dict(color='#444', size=13)),
+                title=dict(text='Top 15 Speed Trap Speeds per Driver (km/h)', font=dict(color='#444', size=13)),
                 xaxis=dict(
-                    title='Lap Number', 
-                    side='top', 
-                    dtick=5,
-                    gridcolor='rgba(0,0,0,0)',
-                    tickfont=dict(color='#444')
+                    visible=False # Get rid of x-axis as requested
                 ),
                 yaxis=dict(
                     title='', 
                     autorange='reversed',
                     gridcolor='rgba(0,0,0,0)',
-                    tickfont=dict(color='#FBF9E4')
+                    tickfont=dict(color='#FBF9E4', size=11)
                 ),
-                margin=dict(l=50, r=20, t=80, b=20),
+                margin=dict(l=60, r=20, t=40, b=10),
+                height=700 # Increased height to accommodate all drivers
             )
         else:
             fig_heatmap = empty
-
-
+            
         return table, fig, fig_box, fig_strip, fig_pos, fig_heatmap
 
     except Exception as e:
