@@ -2172,3 +2172,236 @@ def update_races_content(round_number, year):
         print(f'Races content error: {e}')
         err = html.Div(f'Error: {e}', className='standings-empty')
         return err, empty, empty, empty, empty, empty
+
+
+
+
+
+# ── Drivers page ──────────────────────────────────────────────────────────────
+@callback(
+    Output('drivers-year-pill-dropdown', 'style', allow_duplicate=True),
+    Output('drivers-year-overlay', 'style', allow_duplicate=True),
+    Input('drivers-year-pill-toggle', 'n_clicks'),
+    State('drivers-year-pill-dropdown', 'style'),
+    prevent_initial_call=True,
+)
+def toggle_drivers_year(n_clicks, current_style):
+    if isinstance(current_style, dict) and current_style.get('display') == 'none':
+        return {'display': 'block'}, {'display': 'block'}
+    return {'display': 'none'}, {'display': 'none'}
+
+
+@callback(
+    Output('drivers-store-year', 'data'),
+    Output('drivers-pill-year-display', 'children'),
+    Output('drivers-year-pill-dropdown', 'style', allow_duplicate=True),
+    Output('drivers-year-overlay', 'style', allow_duplicate=True),
+    Input({'type': 'drivers-year-pill', 'index': ALL}, 'n_clicks'),
+    State({'type': 'drivers-year-pill', 'index': ALL}, 'id'),
+    prevent_initial_call=True,
+)
+def select_drivers_year(n_clicks, ids):
+    from dash import ctx
+    triggered = ctx.triggered_id
+    if not triggered:
+        return 2025, '2025', {'display': 'none'}, {'display': 'none'}
+    selected = triggered['index']
+    return selected, str(selected), {'display': 'none'}, {'display': 'none'}
+
+
+@callback(
+    Output('drivers-year-pill-dropdown', 'style', allow_duplicate=True),
+    Output('drivers-year-overlay', 'style', allow_duplicate=True),
+    Input('drivers-year-overlay', 'n_clicks'),
+    prevent_initial_call=True,
+)
+def close_drivers_year(n_clicks):
+    return {'display': 'none'}, {'display': 'none'}
+
+
+@callback(
+    Output('drivers-driver-pill-dropdown', 'children'),
+    Output('drivers-driver-pill-dropdown', 'style', allow_duplicate=True),
+    Output('drivers-driver-overlay', 'style', allow_duplicate=True),
+    Input('drivers-driver-pill-toggle', 'n_clicks'),
+    State('drivers-store-year', 'data'),
+    State('drivers-driver-pill-dropdown', 'style'),
+    prevent_initial_call=True,
+)
+def toggle_drivers_driver(n_clicks, year, current_style):
+    if isinstance(current_style, dict) and current_style.get('display') != 'none':
+        return no_update, {'display': 'none'}, {'display': 'none'}
+    schedule = fastf1.get_event_schedule(year, include_testing=False)
+    schedule = schedule[schedule['EventFormat'] != 'testing']
+    try:
+        first_round = int(schedule.iloc[0]['RoundNumber'])
+        session = fastf1.get_session(year, first_round, 'R')
+        session.load(telemetry=False, weather=False, messages=False)
+        drivers = session.results[['Abbreviation', 'FullName']].copy()
+        items = [
+            html.Div(
+                f"{row['Abbreviation']} — {row['FullName']}",
+                id={'type': 'drivers-driver-pill', 'index': row['Abbreviation']},
+                className='year-dropdown-item'
+            )
+            for _, row in drivers.iterrows()
+        ]
+        return items, {'display': 'block'}, {'display': 'block'}
+    except Exception as e:
+        return [], {'display': 'none'}, {'display': 'none'}
+
+
+@callback(
+    Output('drivers-store-driver', 'data'),
+    Output('drivers-pill-driver-display', 'children'),
+    Output('drivers-driver-pill-dropdown', 'style', allow_duplicate=True),
+    Output('drivers-driver-overlay', 'style', allow_duplicate=True),
+    Input({'type': 'drivers-driver-pill', 'index': ALL}, 'n_clicks'),
+    State({'type': 'drivers-driver-pill', 'index': ALL}, 'id'),
+    prevent_initial_call=True,
+)
+def select_drivers_driver(n_clicks, ids):
+    from dash import ctx
+    triggered = ctx.triggered_id
+    if not triggered or not any(n for n in n_clicks if n):
+        return no_update, no_update, {'display': 'none'}, {'display': 'none'}
+    selected = triggered['index']
+    return selected, selected, {'display': 'none'}, {'display': 'none'}
+
+
+@callback(
+    Output('drivers-driver-pill-dropdown', 'style', allow_duplicate=True),
+    Output('drivers-driver-overlay', 'style', allow_duplicate=True),
+    Input('drivers-driver-overlay', 'n_clicks'),
+    prevent_initial_call=True,
+)
+def close_drivers_driver(n_clicks):
+    return {'display': 'none'}, {'display': 'none'}
+
+
+@callback(
+    Output('drivers-content', 'children'),
+    Input('drivers-store-driver', 'data'),
+    Input('drivers-store-year', 'data'),
+)
+def update_drivers_content(driver, year):
+    import pandas as pd
+
+    if not driver or not year:
+        return html.Div('Select a season and driver.',
+                        style={'color': '#555', 'fontFamily': 'Titillium Web',
+                               'fontSize': '0.8rem', 'padding': '20px'})
+    try:
+        schedule = fastf1.get_event_schedule(year, include_testing=False)
+        races = schedule[schedule['EventFormat'] != 'testing']
+        results_list = []
+
+        for _, event in races.iterrows():
+            try:
+                session = fastf1.get_session(year, event['RoundNumber'], 'R')
+                session.load(telemetry=False, weather=False, messages=False)
+                res = session.results
+                if res is None or len(res) == 0:
+                    continue
+                res = res.copy()
+                res['RoundNumber'] = event['RoundNumber']
+                res['EventName'] = event['EventName']
+                results_list.append(res)
+            except Exception:
+                continue
+
+        if not results_list:
+            return html.Div('No data available.')
+
+        all_results = pd.concat(results_list, ignore_index=True)
+        drv_results = all_results[all_results['Abbreviation'] == driver]
+
+        if len(drv_results) == 0:
+            return html.Div(f'No data for {driver} in {year}.')
+
+        team = drv_results.iloc[-1]['TeamName']
+        full_name = drv_results.iloc[-1]['FullName']
+        team_color = TEAM_COLORS.get(team, '#444')
+        logo_file = TEAM_LOGOS.get(team, None)
+
+        # Stats
+        wins = len(drv_results[drv_results['Position'] == 1])
+        podiums = len(drv_results[drv_results['Position'] <= 3])
+        points = int(drv_results['Points'].sum())
+        races_count = len(drv_results)
+        avg_pts = round(points / races_count, 1) if races_count > 0 else 0
+        dnfs = len(drv_results[drv_results['Status'].str.contains(
+            'DNF|Retired|Accident|Engine|Mechanical', case=False, na=False)])
+        poles = len(drv_results[drv_results['GridPosition'] == 1])
+        laps_led = int(drv_results['Points'].count())  # placeholder
+        best_finish = int(drv_results['Position'].min()) \
+            if len(drv_results) > 0 else '—'
+        avg_finish = round(drv_results['Position'].mean(), 1)
+
+        def stat_card(label, value, sub='', accent=False):
+            return html.Div([
+                html.Div([
+                    html.Div(label, className='card-label'),
+                    html.Div(str(value), className='card-value',
+                             style={'color': team_color if accent else '#FBF9E4'}),
+                    html.Div(sub, className='card-sub') if sub else None,
+                ]),
+            ], className='info-card')
+
+        # Driver hero
+        hero = html.Div([
+            html.Div([
+                html.Div(f'{year} Season', style={
+                    'fontSize': '0.6rem', 'color': '#888',
+                    'letterSpacing': '0.15em', 'textTransform': 'uppercase',
+                    'fontFamily': 'Titillium Web', 'marginBottom': '4px'
+                }),
+                html.Div(full_name, style={
+                    'fontFamily': 'Titillium Web', 'fontSize': '1.8rem',
+                    'fontWeight': '900', 'color': team_color, 'lineHeight': '1'
+                }),
+                html.Div(team, style={
+                    'fontSize': '0.7rem', 'color': '#888',
+                    'fontFamily': 'Titillium Web', 'marginTop': '4px'
+                }),
+            ], style={'flex': '1'}),
+            html.Div(
+                html.Img(src=f'/assets/logos/{logo_file}.avif',
+                         style={'height': '36px', 'objectFit': 'contain'})
+                if logo_file else html.Div(),
+                style={'display': 'flex', 'alignItems': 'center'},
+            ),
+        ], style={
+            'display': 'flex',
+            'justifyContent': 'space-between',
+            'alignItems': 'center',
+            'background': f'linear-gradient(135deg, rgba(0,0,0,0.8), {team_color}22)',
+            'border': f'1px solid {team_color}44',
+            'borderLeft': f'3px solid {team_color}',
+            'borderRadius': '6px',
+            'padding': '14px 16px',
+            'marginBottom': '16px',
+        })
+
+        # Stat cards grid
+        cards = html.Div([
+            stat_card('Grand Prix Wins', wins, 'Sprint wins not included', accent=True),
+            stat_card('Podiums', podiums, 'Sprint podiums not included'),
+            stat_card('Season Points', points, f'Avg. {avg_pts} per race'),
+            stat_card('Pole Positions', poles),
+            stat_card('Best Finish', f'P{best_finish}'),
+            stat_card('Avg Finish', f'P{avg_finish}'),
+            stat_card('DNFs', dnfs),
+            stat_card('Races', races_count),
+        ], style={
+            'display': 'grid',
+            'gridTemplateColumns': 'repeat(4, 1fr)',
+            'gap': '10px',
+            'marginBottom': '16px',
+        })
+
+        return html.Div([hero, cards])
+
+    except Exception as e:
+        print(f'Drivers content error: {e}')
+        return html.Div(f'Error: {e}', className='standings-empty')
