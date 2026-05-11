@@ -2219,6 +2219,9 @@ def close_drivers_year(n_clicks):
     return {'display': 'none'}, {'display': 'none'}
 
 
+from dash import no_update, ctx
+
+# --- Toggle Driver Dropdown ---
 @callback(
     Output('drivers-driver-pill-dropdown', 'children'),
     Output('drivers-driver-pill-dropdown', 'style', allow_duplicate=True),
@@ -2229,42 +2232,56 @@ def close_drivers_year(n_clicks):
     prevent_initial_call=True,
 )
 def toggle_drivers_driver(n_clicks, year, current_style):
-    if isinstance(current_style, dict) and current_style.get('display') != 'none':
+    # If dropdown is already open, close it
+    if isinstance(current_style, dict) and current_style.get('display') == 'block':
         return no_update, {'display': 'none'}, {'display': 'none'}
-    schedule = fastf1.get_event_schedule(year, include_testing=False)
-    schedule = schedule[schedule['EventFormat'] != 'testing']
+    
+    if not year:
+        return [html.Div("Select a year first", className='year-dropdown-item')], {'display': 'block'}, {'display': 'block'}
+
     try:
+        # Optimization: You might want to cache this fastf1 call
+        schedule = fastf1.get_event_schedule(year, include_testing=False)
+        schedule = schedule[schedule['EventFormat'] != 'testing']
+        
+        # Get the most recent finished race to get an accurate driver list
+        # Using -1 (last) or 0 (first) depends on if you want current or season-start roster
         first_round = int(schedule.iloc[0]['RoundNumber'])
         session = fastf1.get_session(year, first_round, 'R')
         session.load(telemetry=False, weather=False, messages=False)
+        
         drivers = session.results[['Abbreviation', 'FullName']].copy()
         items = [
             html.Div(
                 f"{row['Abbreviation']} — {row['FullName']}",
                 id={'type': 'drivers-driver-pill', 'index': row['Abbreviation']},
-                className='year-dropdown-item'
+                className='year-dropdown-item',
+                n_clicks=0 # Explicitly set n_clicks to 0
             )
             for _, row in drivers.iterrows()
         ]
         return items, {'display': 'block'}, {'display': 'block'}
     except Exception as e:
-        return [], {'display': 'none'}, {'display': 'none'}
+        print(f"Error loading drivers: {e}")
+        return [html.Div("Error loading drivers", className='year-dropdown-item')], {'display': 'block'}, {'display': 'block'}
 
 
+# --- Select Driver from Dropdown ---
 @callback(
     Output('drivers-store-driver', 'data'),
     Output('drivers-pill-driver-display', 'children'),
     Output('drivers-driver-pill-dropdown', 'style', allow_duplicate=True),
     Output('drivers-driver-overlay', 'style', allow_duplicate=True),
     Input({'type': 'drivers-driver-pill', 'index': ALL}, 'n_clicks'),
-    State({'type': 'drivers-driver-pill', 'index': ALL}, 'id'),
     prevent_initial_call=True,
 )
-def select_drivers_driver(n_clicks, ids):
-    from dash import ctx
+def select_drivers_driver(n_clicks):
     triggered = ctx.triggered_id
-    if not triggered or not any(n for n in n_clicks if n):
-        return no_update, no_update, {'display': 'none'}, {'display': 'none'}
+    
+    # Check if the trigger was actually a click (n_clicks > 0)
+    if not triggered or not ctx.triggered[0]['value']:
+        return no_update, no_update, no_update, no_update
+
     selected = triggered['index']
     return selected, selected, {'display': 'none'}, {'display': 'none'}
 
