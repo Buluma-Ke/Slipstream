@@ -2303,6 +2303,7 @@ def close_drivers_driver(n_clicks):
 )
 def update_drivers_content(driver, year):
     import pandas as pd
+    import plotly.graph_objects as go
 
     if not driver or not year:
         return html.Div('Select a season and driver.',
