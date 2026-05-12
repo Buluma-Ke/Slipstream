@@ -2547,6 +2547,63 @@ def update_drivers_content(driver, year):
 
         donut_graph = dcc.Graph(figure=fig_donut, config={'displayModeBar': False})
 
+        # Fetch Previous Year Data
+        prev_year_evo = []
+        try:
+            # We use the same helper logic you have for current year
+            prev_schedule = fastf1.get_event_schedule(year - 1, include_testing=False)
+            prev_races = prev_schedule[prev_schedule['EventFormat'] != 'testing']
+
+            # To keep it fast, we only need points/rounds
+            # Note: In a production app, caching this is highly recommended
+            for _, event in prev_races.iterrows():
+                try:
+                    s_prev = fastf1.get_session(year - 1, event['RoundNumber'], 'R')
+                    s_prev.load(telemetry=False, weather=False, messages=False)
+                    res_p = s_prev.results
+                    row_p = res_p[res_p['Abbreviation'] == driver]
+                    if not row_p.empty:
+                        prev_year_evo.append({'Round': event['RoundNumber'], 'Points': row_p.iloc[0]['Points']})
+                except: continue
+        except: pass
+
+        df_prev = pd.DataFrame(prev_year_evo)
+        if not df_prev.empty:
+            df_prev = df_prev.sort_values('Round')
+            df_prev['CumPoints'] = df_prev['Points'].cumsum()
+
+        # Build Evolution Chart
+        fig_evo = go.Figure()
+
+        # Previous Year Trace (Dimmer/Gray)
+        if not df_prev.empty:
+            fig_evo.add_trace(go.Scatter(
+                x=df_prev['Round'], y=df_prev['CumPoints'],
+                name=f'{year-1}', mode='lines',
+                line=dict(color='#444', width=2, dash='dot')
+            ))
+
+        # Current Year Trace (Team Color)
+        fig_evo.add_trace(go.Scatter(
+            x=drv_results['RoundNumber'], y=drv_results['CumulativePoints'],
+            name=f'{year}', mode='lines+markers',
+            line=dict(color=team_color, width=3)
+        ))
+
+        fig_evo.update_layout(
+            title=dict(text="Points Evolution vs. Previous Season", font=dict(family="Titillium Web", size=16, color="white")),
+            paper_bgcolor='rgba(0,0,0,0)',
+            plot_bgcolor='rgba(0,0,0,0)',
+            margin=dict(l=40, r=20, t=50, b=40),
+            height=300,
+            legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1, font=dict(color="#888")),
+            xaxis=dict(showgrid=False, color='#444', title="Round"),
+            yaxis=dict(showgrid=True, gridcolor='#222', color='#444', title="Points"),
+            font=dict(family="Titillium Web")
+        )
+
+        evo_graph = dcc.Graph(figure=fig_evo, config={'displayModeBar': False})
+
         return html.Div([hero, cards, chart_layout])
 
 
