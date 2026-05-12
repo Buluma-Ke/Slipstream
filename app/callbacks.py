@@ -2505,22 +2505,6 @@ def update_drivers_content(driver, year):
 
         dist_graph = dcc.Graph(figure=fig_dist, config={'displayModeBar': False})
 
-
-        # Main chart container
-        chart_layout = html.Div([
-            # Left Column (Radial + Mini Donut)
-            html.Div([
-                html.Div(radial_graph, className='info-card', style={'marginBottom': '10px'}),
-                # Placeholder for the "Finish Positions in Points" Donut in next step
-                html.Div(id='mini-donut-placeholder')
-            ], style={'flex': '1'}),
-
-            # Right Column (Distribution)
-            html.Div([
-                html.Div(dist_graph, className='info-card')
-            ], style={'flex': '1.5'})
-        ], style={'display': 'flex', 'gap': '15px', 'marginTop': '16px'})
-
         # Data for Donut
         in_pts = len(drv_results[drv_results['Points'] > 0])
         out_pts = len(drv_results) - in_pts
@@ -2604,8 +2588,21 @@ def update_drivers_content(driver, year):
 
         evo_graph = dcc.Graph(figure=fig_evo, config={'displayModeBar': False})
 
-        return html.Div([hero, cards, chart_layout])
+        chart_layout = html.Div([
+            # Column 1: Season Performance & Donut
+            html.Div([
+                html.Div(radial_graph, className='info-card', style={'marginBottom': '10px'}),
+                html.Div(donut_graph, className='info-card')
+            ], style={'flex': '1'}),
 
+            # Column 2: Distribution & Evolution
+            html.Div([
+                html.Div(dist_graph, className='info-card', style={'marginBottom': '10px'}),
+                html.Div(evo_graph, className='info-card')
+            ], style={'flex': '1.5'})
+        ], style={'display': 'flex', 'gap': '15px', 'marginTop': '16px'})
+
+        return html.Div([hero, cards, chart_layout])
 
 
     except Exception as e:
