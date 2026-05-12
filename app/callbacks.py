@@ -2471,7 +2471,57 @@ def update_drivers_content(driver, year):
 
         radial_graph = dcc.Graph(figure=fig_radial, config={'displayModeBar': False})
 
-        return html.Div([hero, cards])
+        # Finish Positions Distribution (Horizontal Bar)
+
+        # Count occurrences of each position P1-P20
+        pos_counts = drv_results['Position'].value_counts().sort_index()
+        all_pos = [f"P{i}" for i in range(1, 21)]
+        counts = [pos_counts.get(i, 0) for i in range(1, 21)]
+
+        fig_dist = go.Figure()
+        fig_dist.add_trace(go.Bar(
+            y=all_pos,
+            x=counts,
+            orientation='h',
+            marker=dict(
+                color=[team_color if c > 0 else '#222' for c in counts],
+                line=dict(color='rgba(0,0,0,0)', width=0)
+            ),
+            text=[str(c) if c > 0 else "" for c in counts],
+            textposition='auto',
+            insidetextfont=dict(color='black', family='Titillium Web', size=10),
+        ))
+
+        fig_dist.update_layout(
+            title=dict(text="Finish Positions Distribution", font=dict(family="Titillium Web", size=16, color="white")),
+            paper_bgcolor='rgba(0,0,0,0)',
+            plot_bgcolor='rgba(0,0,0,0)',
+            margin=dict(l=40, r=20, t=50, b=20),
+            height=500,
+            xaxis=dict(showgrid=False, visible=False),
+            yaxis=dict(autorange="reversed", showgrid=False, color='#888'),
+            font=dict(family="Titillium Web")
+        )
+
+        dist_graph = dcc.Graph(figure=fig_dist, config={'displayModeBar': False})
+
+
+        # # Main chart container
+        # chart_layout = html.Div([
+        #     # Left Column (Radial + Mini Donut)
+        #     html.Div([
+        #         html.Div(radial_graph, className='info-card', style={'marginBottom': '10px'}),
+        #         # Placeholder for the "Finish Positions in Points" Donut in next step
+        #         html.Div(id='mini-donut-placeholder')
+        #     ], style={'flex': '1'}),
+
+        #     # Right Column (Distribution)
+        #     html.Div([
+        #         html.Div(dist_graph, className='info-card')
+        #     ], style={'flex': '1.5'})
+        # ], style={'display': 'flex', 'gap': '15px', 'marginTop': '16px'})
+
+        # return html.Div([hero, cards, chart_layout])
 
 
 
