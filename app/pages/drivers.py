@@ -53,38 +53,28 @@ def layout():
         # Content
         dcc.Loading(type='circle', color='#E8002D',
                     children=html.Div(id='drivers-content')),
+       # In drivers.py layout() function:
+
+        # Content
         dcc.Loading(type='circle', color='#E8002D', children=[
-            html.Div(id='drivers-hero-container'),
-            html.Div(id='drivers-stats-cards-container'),
+            # Hero and Stats section
+            html.Div(id='drivers-hero-content'),
+            html.Div(id='drivers-stats-cards'),
 
-            # The Graph Grid Structure
+            # Graphs Grid (Controlled by callback style)
             html.Div([
-                # Left Column
+                # Column 1
                 html.Div([
-                    html.Div([
-                        html.Div("Season Performance", className='card-label'),
-                        dcc.Graph(id='graph-radial', config={'displayModeBar': False})
-                    ], className='info-card', style={'marginBottom': '10px'}),
-
-                    html.Div([
-                        html.Div("Finish Positions in Points", className='card-label'),
-                        dcc.Graph(id='graph-donut', config={'displayModeBar': False})
-                    ], className='info-card'),
+                    html.Div([html.Div("Season Performance", className='card-label'), dcc.Graph(id='graph-radial', config={'displayModeBar': False})], className='info-card', style={'marginBottom': '10px'}),
+                    html.Div([html.Div("Finish Positions in Points", className='card-label'), dcc.Graph(id='graph-donut', config={'displayModeBar': False})], className='info-card'),
                 ], style={'flex': '1'}),
 
-                # Right Column
+                # Column 2
                 html.Div([
-                    html.Div([
-                        html.Div("Finish Positions Distribution", className='card-label'),
-                        dcc.Graph(id='graph-dist', config={'displayModeBar': False})
-                    ], className='info-card', style={'marginBottom': '10px'}),
-
-                    html.Div([
-                        html.Div("Points Evolution", className='card-label'),
-                        dcc.Graph(id='graph-evo', config={'displayModeBar': False})
-                    ], className='info-card'),
+                    html.Div([html.Div("Finish Positions Distribution", className='card-label'), dcc.Graph(id='graph-dist', config={'displayModeBar': False})], className='info-card', style={'marginBottom': '10px'}),
+                    html.Div([html.Div("Points Evolution", className='card-label'), dcc.Graph(id='graph-evo', config={'displayModeBar': False})], className='info-card'),
                 ], style={'flex': '1.5'})
-            ], id='drivers-graphs-container', style={'display': 'none', 'gap': '10px', 'marginTop': '16px'})
+            ], id='drivers-graphs-grid', style={'display': 'none'}) # Hidden until data is ready
         ]),
 
     ], className='home-wrapper')
