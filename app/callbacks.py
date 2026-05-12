@@ -373,15 +373,15 @@ def toggle_sidebar(n_clicks, current_class):
     [Input(f'nav-{page_id}', 'n_clicks')
      for page_id, _, _ in [
          ('home', '', ''), ('schedule', '', ''), ('driver-standings', '', ''),
-         ('constructor-standings', '', ''), ('races', '', ''), ('drivers', '', ''), 
+         ('constructor-standings', '', ''), ('races', '', ''), ('drivers', '', ''),
          ('teams', '', ''), ('telemetry', '', ''), ('predictions', '', ''),
      ]],
     prevent_initial_call=True,
 )
 def route_page(*args):
     from dash import ctx
-    from app.pages import (home, races, schedule, standings, 
-                           drivers, teams, telemetry, predictions, 
+    from app.pages import (home, races, schedule, standings,
+                           drivers, teams, telemetry, predictions,
                            driver_standings, constructor_standings)
 
     page_map = {
@@ -452,7 +452,7 @@ def update_home(year):
                 continue
 
         if not results_list:
-            return ('—',) * 15 
+            return ('—',) * 15
 
         all_results = pd.concat(results_list, ignore_index=True)
 
@@ -533,7 +533,7 @@ def update_home(year):
                     html.Td(f"{int(row['Points'])}", className='pts'),
                 ], className='p1' if pos == 1 else '')
             )
- 
+
 
         drivers_table = html.Table([
             html.Thead(html.Tr([
@@ -601,8 +601,8 @@ def update_home(year):
 
     except Exception as e:
         print(f'Home error: {e}')
-        return ('—',) * 15 
-    
+        return ('—',) * 15
+
 
 # --- Home year pill toggle ---
 @callback(
@@ -905,7 +905,7 @@ def update_driver_standings_all(year):
             'borderRadius': '6px',
             'padding': '14px 16px',
             'marginBottom': '16px',
-           
+
         })
 
         # ── Table ──
@@ -977,7 +977,7 @@ def update_driver_standings_all(year):
                 )
                 rank = list(pts.index).index(drv) + 1 \
                     if drv in pts.index else None
-                
+
                 if drv in pts.index:
                     rank = list(pts.index).index(drv) + 1
                 elif rankings:
@@ -1039,8 +1039,8 @@ def update_driver_standings_all(year):
                 range=[actual_max, 1],
                 tickvals=list(range(1, actual_max + 1)),
                 # New "Ghost" Grid lines
-                showgrid=True, 
-                gridcolor='rgba(255, 255, 255, 0.05)', 
+                showgrid=True,
+                gridcolor='rgba(255, 255, 255, 0.05)',
                 gridwidth=1,
                 zeroline=True,
                 zerolinecolor='rgba(255, 255, 255, 0.1)'
@@ -1055,7 +1055,7 @@ def update_driver_standings_all(year):
             .groupby('Abbreviation').size()
         points_finishes = all_results[all_results['Points'] > 0]\
             .groupby('Abbreviation').size()
-        
+
         poles = all_results[all_results['GridPosition'] == 1]\
             .groupby('Abbreviation').size()
 
@@ -1069,7 +1069,7 @@ def update_driver_standings_all(year):
         fig3.add_trace(go.Bar(
             name='Wins', x=drivers,
             y=[wins.get(d, 0) for d in drivers],
-            marker=dict(color='#6C5FA7', line=dict(color='#6C5FA7', width=1)), 
+            marker=dict(color='#6C5FA7', line=dict(color='#6C5FA7', width=1)),
         ))
 
         # Podiums - Blue
@@ -1108,7 +1108,7 @@ def update_driver_standings_all(year):
             bargap=0.15,
             bargroupgap=0.1,
             # Using your standard AXIS dict (no lines/borders)
-            xaxis=AXIS, 
+            xaxis=AXIS,
             yaxis=AXIS | dict(showgrid=True, gridcolor='rgba(255, 255, 255, 0.05)', zeroline=True, zerolinecolor='rgba(255, 255, 255, 0.1)'),
             legend=dict(
                 orientation="h",
@@ -1596,13 +1596,13 @@ def update_constructor_standings(year):
         print(f'Constructor standings error: {e}')
         err = html.Div(f'Error: {e}', className='standings-empty')
         return err, empty, empty, empty, []
-    
+
 
 
 
 # ──────────────────── Races page ────────────────────
 
-    
+
 @callback(
     Output('races-year-pill-dropdown', 'style', allow_duplicate=True),
     Output('races-year-overlay', 'style', allow_duplicate=True),
@@ -1680,14 +1680,14 @@ def toggle_races_race(n_clicks, year, current_style):
 # )
 # def select_races_race(n_clicks, ids):
 #     from dash import ctx
-    
+
 #     # Check if the callback was triggered by a specific button click
 #     if not ctx.triggered or not isinstance(ctx.triggered_id, dict):
 #         return no_update, no_update, no_update, no_update
 
 #     triggered_id = ctx.triggered_id
 #     selected_index = triggered_id['index']
-    
+
 #     # Find the label for the selected index
 #     # (Using the year/schedule might be safer than relying on IDs)
 #     return selected_index, f"Round {selected_index}", {'display': 'none'}, {'display': 'none'}
@@ -1897,9 +1897,9 @@ def update_races_content(round_number, year):
             # Check if hex_color is None, empty, or not a string
             if not hex_color or not isinstance(hex_color, str):
                 return f'rgba(128,128,128,{alpha})'  # Return a default grey
-                
+
             hex_color = hex_color.lstrip('#')
-            
+
             # Ensure we have a valid hex length (6 chars)
             if len(hex_color) != 6:
                 return f'rgba(128,128,128,{alpha})'
@@ -1909,7 +1909,7 @@ def update_races_content(round_number, year):
                 return f'rgba({r},{g},{b},{alpha})'
             except ValueError:
                 return f'rgba(128,128,128,{alpha})'
-        
+
         fig_box = go.Figure()
 
         driver_order = clean_laps.groupby('Driver')['LapTimeSec']\
@@ -2039,7 +2039,7 @@ def update_races_content(round_number, year):
                 ),
                 margin=dict(l=80, r=20, t=40, b=20),
             )
-        
+
         # ── Position evolution ──
         fig_pos = go.Figure()
 
@@ -2115,19 +2115,19 @@ def update_races_content(round_number, year):
         speed_data = laps.dropna(subset=['SpeedST']).copy()
         if len(speed_data) > 0:
             speed_data['SpeedST'] = speed_data['SpeedST'].astype(int)
-            
+
             # Rank speeds for EACH driver individually (1 = fastest)
             speed_data['SpeedRank'] = speed_data.groupby('Driver')['SpeedST'].rank(
                 method='first', ascending=False
             )
-            
+
             # Filter to only keep the top 15 for everyone
             top_15_speeds = speed_data[speed_data['SpeedRank'] <= 20].copy()
-            
+
             # Pivot using 'SpeedRank' as the columns instead of 'LapNumber'
             # This aligns all fastest speeds to the left of the graph
             speed_pivot = top_15_speeds.pivot(index='Driver', columns='SpeedRank', values='SpeedST')
-            
+
             # Sort the Y-axis (Drivers) by their absolute fastest single lap
             driver_best = speed_pivot[1.0].sort_values(ascending=False)
             speed_pivot = speed_pivot.reindex(driver_best.index)
@@ -2154,7 +2154,7 @@ def update_races_content(round_number, year):
                     visible=False # Get rid of x-axis as requested
                 ),
                 yaxis=dict(
-                    title='', 
+                    title='',
                     autorange='reversed',
                     gridcolor='rgba(0,0,0,0)',
                     tickfont=dict(color='#444', size=10)
@@ -2235,7 +2235,7 @@ def toggle_drivers_driver(n_clicks, year, current_style):
     # If dropdown is already open, close it
     if isinstance(current_style, dict) and current_style.get('display') == 'block':
         return no_update, {'display': 'none'}, {'display': 'none'}
-    
+
     if not year:
         return [html.Div("Select a year first", className='year-dropdown-item')], {'display': 'block'}, {'display': 'block'}
 
@@ -2243,13 +2243,13 @@ def toggle_drivers_driver(n_clicks, year, current_style):
         # Optimization: You might want to cache this fastf1 call
         schedule = fastf1.get_event_schedule(year, include_testing=False)
         schedule = schedule[schedule['EventFormat'] != 'testing']
-        
+
         # Get the most recent finished race to get an accurate driver list
         # Using -1 (last) or 0 (first) depends on if you want current or season-start roster
         first_round = int(schedule.iloc[0]['RoundNumber'])
         session = fastf1.get_session(year, first_round, 'R')
         session.load(telemetry=False, weather=False, messages=False)
-        
+
         drivers = session.results[['Abbreviation', 'FullName']].copy()
         items = [
             html.Div(
@@ -2277,7 +2277,7 @@ def toggle_drivers_driver(n_clicks, year, current_style):
 )
 def select_drivers_driver(n_clicks):
     triggered = ctx.triggered_id
-    
+
     # Check if the trigger was actually a click (n_clicks > 0)
     if not triggered or not ctx.triggered[0]['value']:
         return no_update, no_update, no_update, no_update
@@ -2417,7 +2417,63 @@ def update_drivers_content(driver, year):
             'marginBottom': '16px',
         })
 
+        # Season Performance (Radial Bar Chart)
+        #=======================================
+
+        #import plotly.graph_objects as go
+
+        # Data Preparation
+        total_races = len(drv_results)
+        pts_finishes = len(drv_results[drv_results['Points'] > 0])
+
+        # Define categories and their values
+        perf_metrics = {
+            'Wins': {'val': wins, 'color': '#FFD700'},
+            'Podiums': {'val': podiums, 'color': team_color},
+            'In Points': {'val': pts_finishes, 'color': '#22D3EE'},
+            'DNF/DSQ': {'val': dnfs, 'color': '#EF4444'}
+        }
+
+        fig_radial = go.Figure()
+
+        # Add tracks (the background gray circles) and the data bars
+        for i, (label, data) in enumerate(perf_metrics.items()):
+            r_val = 100 - (i * 20) # Spacing between rings
+
+            # Background track
+            fig_radial.add_trace(go.Scatterpolar(
+                r=[r_val, r_val], theta=[0, 360], mode='lines',
+                line=dict(color='#222', width=12), hoverinfo='skip'
+            ))
+
+            # Data Bar (calculate percentage of total season)
+            percentage = (data['val'] / total_races) * 360 if total_races > 0 else 0
+            fig_radial.add_trace(go.Scatterpolar(
+                r=[r_val, r_val], theta=[0, percentage], mode='lines',
+                line=dict(color=data['color'], width=12, shape='spline'),
+                name=label,
+                hovertemplate=f"{label}: {data['val']}<extra></extra>"
+            ))
+
+        fig_radial.update_layout(
+            title=dict(text="Season Performance", font=dict(family="Titillium Web", size=16, color="white")),
+            polar=dict(
+                hole=0.4,
+                bgcolor='rgba(0,0,0,0)',
+                radialaxis=dict(visible=False),
+                angularaxis=dict(visible=False)
+            ),
+            showlegend=False,
+            paper_bgcolor='rgba(0,0,0,0)',
+            margin=dict(l=20, r=20, t=50, b=20),
+            height=300
+        )
+
+        radial_graph = dcc.Graph(figure=fig_radial, config={'displayModeBar': False})
+
         return html.Div([hero, cards])
+
+
 
     except Exception as e:
         print(f'Drivers content error: {e}')
