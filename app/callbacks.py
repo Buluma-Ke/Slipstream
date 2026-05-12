@@ -2521,6 +2521,32 @@ def update_drivers_content(driver, year):
             ], style={'flex': '1.5'})
         ], style={'display': 'flex', 'gap': '15px', 'marginTop': '16px'})
 
+        # Data for Donut
+        in_pts = len(drv_results[drv_results['Points'] > 0])
+        out_pts = len(drv_results) - in_pts
+        pts_pct = round((in_pts / len(drv_results)) * 100, 1) if len(drv_results) > 0 else 0
+
+        fig_donut = go.Figure(data=[go.Pie(
+            labels=['Points', 'No Points'],
+            values=[in_pts, out_pts],
+            hole=.7,
+            marker=dict(colors=[team_color, '#222']),
+            textinfo='none',
+            hoverinfo='label+value'
+        )])
+
+        fig_donut.update_layout(
+            title=dict(text="Finish Positions in Points", font=dict(family="Titillium Web", size=16, color="white")),
+            annotations=[dict(text=f'{pts_pct}%', x=0.5, y=0.5, font_size=20, font_family="Titillium Web", font_color="white", showarrow=False),
+                         dict(text=str(len(drv_results)), x=0.5, y=0.1, font_size=12, font_color="#888", showarrow=False)],
+            showlegend=False,
+            paper_bgcolor='rgba(0,0,0,0)',
+            margin=dict(l=20, r=20, t=50, b=20),
+            height=250
+        )
+
+        donut_graph = dcc.Graph(figure=fig_donut, config={'displayModeBar': False})
+
         return html.Div([hero, cards, chart_layout])
 
 
