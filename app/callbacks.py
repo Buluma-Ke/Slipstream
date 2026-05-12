@@ -2298,6 +2298,13 @@ def close_drivers_driver(n_clicks):
 
 @callback(
     Output('drivers-content', 'children'),
+    Output('drivers-hero-container', 'children'),
+    Output('drivers-stats-cards-container', 'children'),
+    Output('graph-radial', 'figure'),
+    Output('graph-donut', 'figure'),
+    Output('graph-dist', 'figure'),
+    Output('graph-evo', 'figure'),
+    Output('drivers-graphs-container', 'style'),
     Input('drivers-store-driver', 'data'),
     Input('drivers-store-year', 'data'),
 )

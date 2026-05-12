@@ -53,5 +53,38 @@ def layout():
         # Content
         dcc.Loading(type='circle', color='#E8002D',
                     children=html.Div(id='drivers-content')),
+        dcc.Loading(type='circle', color='#E8002D', children=[
+            html.Div(id='drivers-hero-container'),
+            html.Div(id='drivers-stats-cards-container'),
+
+            # The Graph Grid Structure
+            html.Div([
+                # Left Column
+                html.Div([
+                    html.Div([
+                        html.Div("Season Performance", className='card-label'),
+                        dcc.Graph(id='graph-radial', config={'displayModeBar': False})
+                    ], className='info-card', style={'marginBottom': '10px'}),
+
+                    html.Div([
+                        html.Div("Finish Positions in Points", className='card-label'),
+                        dcc.Graph(id='graph-donut', config={'displayModeBar': False})
+                    ], className='info-card'),
+                ], style={'flex': '1'}),
+
+                # Right Column
+                html.Div([
+                    html.Div([
+                        html.Div("Finish Positions Distribution", className='card-label'),
+                        dcc.Graph(id='graph-dist', config={'displayModeBar': False})
+                    ], className='info-card', style={'marginBottom': '10px'}),
+
+                    html.Div([
+                        html.Div("Points Evolution", className='card-label'),
+                        dcc.Graph(id='graph-evo', config={'displayModeBar': False})
+                    ], className='info-card'),
+                ], style={'flex': '1.5'})
+            ], id='drivers-graphs-container', style={'display': 'none', 'gap': '10px', 'marginTop': '16px'})
+        ]),
 
     ], className='home-wrapper')
