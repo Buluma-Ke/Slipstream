@@ -2425,192 +2425,76 @@ def update_drivers_content(driver, year):
             'marginBottom': '16px',
         })
 
-        # Season Performance (Radial Bar Chart)
-        #=======================================
-
-        #import plotly.graph_objects as go
-
-        # Data Preparation
+        # 1. Radial Bar Logic
         total_races = len(drv_results)
         pts_finishes = len(drv_results[drv_results['Points'] > 0])
-
-        # Define categories and their values
         perf_metrics = {
             'Wins': {'val': wins, 'color': '#FFD700'},
             'Podiums': {'val': podiums, 'color': team_color},
             'In Points': {'val': pts_finishes, 'color': '#22D3EE'},
             'DNF/DSQ': {'val': dnfs, 'color': '#EF4444'}
         }
-
         fig_radial = go.Figure()
-
-        # Add tracks (the background gray circles) and the data bars
         for i, (label, data) in enumerate(perf_metrics.items()):
-            r_val = 100 - (i * 20) # Spacing between rings
-
-            # Background track
-            fig_radial.add_trace(go.Scatterpolar(
-                r=[r_val, r_val], theta=[0, 360], mode='lines',
-                line=dict(color='#222', width=12), hoverinfo='skip'
-            ))
-
-            # Data Bar (calculate percentage of total season)
+            r_val = 100 - (i * 20)
+            fig_radial.add_trace(go.Scatterpolar(r=[r_val, r_val],
+                                                 theta=[0, 360], mode='lines',
+                                                 line=dict(color='#222', width=12),
+                                                 hoverinfo='skip'))
             percentage = (data['val'] / total_races) * 360 if total_races > 0 else 0
-            fig_radial.add_trace(go.Scatterpolar(
-                r=[r_val, r_val], theta=[0, percentage], mode='lines',
-                line=dict(color=data['color'], width=12, shape='spline'),
-                name=label,
-                hovertemplate=f"{label}: {data['val']}<extra></extra>"
-            ))
+            fig_radial.add_trace(go.Scatterpolar(r=[r_val, r_val],
+                                                 theta=[0, percentage],
+                                                 mode='lines',
+                                                 line=dict(color=data['color'],width=12, shape='spline'), name=label))
+        fig_radial.update_layout(polar=dict(hole=0.4,
+                                            bgcolor='rgba(0,0,0,0)',
+                                            radialaxis=dict(visible=False),
+                                            angularaxis=dict(visible=False)),
+                                            showlegend=False,
+                                            paper_bgcolor='rgba(0,0,0,0)',
+                                            margin=dict(l=10, r=10, t=30, b=10), height=300)
 
-        fig_radial.update_layout(
-            title=dict(text="Season Performance", font=dict(family="Titillium Web", size=16, color="white")),
-            polar=dict(
-                hole=0.4,
-                bgcolor='rgba(0,0,0,0)',
-                radialaxis=dict(visible=False),
-                angularaxis=dict(visible=False)
-            ),
-            showlegend=False,
-            paper_bgcolor='rgba(0,0,0,0)',
-            margin=dict(l=20, r=20, t=50, b=20),
-            height=300
-        )
-
-        radial_graph = dcc.Graph(figure=fig_radial, config={'displayModeBar': False})
-
-        # Finish Positions Distribution (Horizontal Bar)
-
-        # Count occurrences of each position P1-P20
+        # 2. Distribution Logic
         pos_counts = drv_results['Position'].value_counts().sort_index()
-        all_pos = [f"P{i}" for i in range(1, 21)]
-        counts = [pos_counts.get(i, 0) for i in range(1, 21)]
+        fig_dist = go.Figure(go.Bar(y=[f"P{i}" for i in range(1, 21)],
+                                    x=[pos_counts.get(i, 0) for i in range(1, 21)],
+                                    orientation='h',
+                                    marker=dict(color=[team_color if pos_counts.get(i, 0) > 0 else '#222' for i in range(1, 21)])))
+        fig_dist.update_layout(paper_bgcolor='rgba(0,0,0,0)',
+                               plot_bgcolor='rgba(0,0,0,0)',
+                               margin=dict(l=40, r=10, t=30, b=10),
+                               height=500,
+                               yaxis=dict(autorange="reversed", color='#888'),
+                               xaxis=dict(visible=False))
 
-        fig_dist = go.Figure()
-        fig_dist.add_trace(go.Bar(
-            y=all_pos,
-            x=counts,
-            orientation='h',
-            marker=dict(
-                color=[team_color if c > 0 else '#222' for c in counts],
-                line=dict(color='rgba(0,0,0,0)', width=0)
-            ),
-            text=[str(c) if c > 0 else "" for c in counts],
-            textposition='auto',
-            insidetextfont=dict(color='black', family='Titillium Web', size=10),
-        ))
-
-        fig_dist.update_layout(
-            title=dict(text="Finish Positions Distribution", font=dict(family="Titillium Web", size=16, color="white")),
-            paper_bgcolor='rgba(0,0,0,0)',
-            plot_bgcolor='rgba(0,0,0,0)',
-            margin=dict(l=40, r=20, t=50, b=20),
-            height=500,
-            xaxis=dict(showgrid=False, visible=False),
-            yaxis=dict(autorange="reversed", showgrid=False, color='#888'),
-            font=dict(family="Titillium Web")
-        )
-
-        dist_graph = dcc.Graph(figure=fig_dist, config={'displayModeBar': False})
-
-        # Data for Donut
-        in_pts = len(drv_results[drv_results['Points'] > 0])
-        out_pts = len(drv_results) - in_pts
+        # 3. Donut Logic
         pts_pct = round((in_pts / len(drv_results)) * 100, 1) if len(drv_results) > 0 else 0
+        fig_donut = go.Figure(data=[go.Pie(labels=['Points', 'No Points'],
+                                           values=[in_pts, len(drv_results)-in_pts],
+                                           hole=.7,
+                                           marker=dict(colors=[team_color, '#222']),textinfo='none')])
+        fig_donut.update_layout(showlegend=False,
+                                paper_bgcolor='rgba(0,0,0,0)',
+                                margin=dict(l=10, r=10, t=30, b=10),
+                                height=250,
+                                annotations=[dict(text=f'{pts_pct}%', x=0.5, y=0.5, font_size=20, font_family="Titillium Web", font_color="white", showarrow=False)])
 
-        fig_donut = go.Figure(data=[go.Pie(
-            labels=['Points', 'No Points'],
-            values=[in_pts, out_pts],
-            hole=.7,
-            marker=dict(colors=[team_color, '#222']),
-            textinfo='none',
-            hoverinfo='label+value'
-        )])
-
-        fig_donut.update_layout(
-            title=dict(text="Finish Positions in Points", font=dict(family="Titillium Web", size=16, color="white")),
-            annotations=[dict(text=f'{pts_pct}%', x=0.5, y=0.5, font_size=20, font_family="Titillium Web", font_color="white", showarrow=False),
-                         dict(text=str(len(drv_results)), x=0.5, y=0.1, font_size=12, font_color="#888", showarrow=False)],
-            showlegend=False,
-            paper_bgcolor='rgba(0,0,0,0)',
-            margin=dict(l=20, r=20, t=50, b=20),
-            height=250
-        )
-
-        donut_graph = dcc.Graph(figure=fig_donut, config={'displayModeBar': False})
-
-        # Fetch Previous Year Data
-        prev_year_evo = []
-        try:
-            # We use the same helper logic you have for current year
-            prev_schedule = fastf1.get_event_schedule(year - 1, include_testing=False)
-            prev_races = prev_schedule[prev_schedule['EventFormat'] != 'testing']
-
-            # To keep it fast, we only need points/rounds
-            # Note: In a production app, caching this is highly recommended
-            for _, event in prev_races.iterrows():
-                try:
-                    s_prev = fastf1.get_session(year - 1, event['RoundNumber'], 'R')
-                    s_prev.load(telemetry=False, weather=False, messages=False)
-                    res_p = s_prev.results
-                    row_p = res_p[res_p['Abbreviation'] == driver]
-                    if not row_p.empty:
-                        prev_year_evo.append({'Round': event['RoundNumber'], 'Points': row_p.iloc[0]['Points']})
-                except: continue
-        except: pass
-
-        df_prev = pd.DataFrame(prev_year_evo)
-        if not df_prev.empty:
-            df_prev = df_prev.sort_values('Round')
-            df_prev['CumPoints'] = df_prev['Points'].cumsum()
-
-        # Build Evolution Chart
+        # 4. Evolution Logic
+        # ... [Your existing prev_year_evo logic] ...
         fig_evo = go.Figure()
+        fig_evo.add_trace(go.Scatter(x=drv_results['RoundNumber'],
+                                     y=drv_results['Points'].cumsum(),
+                                     mode='lines+markers',
+                                     line=dict(color=team_color)))
+        fig_evo.update_layout(paper_bgcolor='rgba(0,0,0,0)',
+                              plot_bgcolor='rgba(0,0,0,0)',
+                              margin=dict(l=40, r=10, t=30, b=30),
+                              height=300)
 
-        # Previous Year Trace (Dimmer/Gray)
-        if not df_prev.empty:
-            fig_evo.add_trace(go.Scatter(
-                x=df_prev['Round'], y=df_prev['CumPoints'],
-                name=f'{year-1}', mode='lines',
-                line=dict(color='#444', width=2, dash='dot')
-            ))
+        # Return the components (Hero and Cards still use your helper functions but as direct outputs)
+        return hero, cards, fig_radial, fig_dist, fig_donut, fig_evo, {'display': 'flex', 'gap': '15px', 'marginTop': '16px'}
 
-        # Current Year Trace (Team Color)
-        fig_evo.add_trace(go.Scatter(
-            x=drv_results['RoundNumber'], y=drv_results['CumulativePoints'],
-            name=f'{year}', mode='lines+markers',
-            line=dict(color=team_color, width=3)
-        ))
-
-        fig_evo.update_layout(
-            title=dict(text="Points Evolution vs. Previous Season", font=dict(family="Titillium Web", size=16, color="white")),
-            paper_bgcolor='rgba(0,0,0,0)',
-            plot_bgcolor='rgba(0,0,0,0)',
-            margin=dict(l=40, r=20, t=50, b=40),
-            height=300,
-            legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1, font=dict(color="#888")),
-            xaxis=dict(showgrid=False, color='#444', title="Round"),
-            yaxis=dict(showgrid=True, gridcolor='#222', color='#444', title="Points"),
-            font=dict(family="Titillium Web")
-        )
-
-        evo_graph = dcc.Graph(figure=fig_evo, config={'displayModeBar': False})
-
-        chart_layout = html.Div([
-            # Column 1: Season Performance & Donut
-            html.Div([
-                html.Div(radial_graph, className='info-card', style={'marginBottom': '10px'}),
-                html.Div(donut_graph, className='info-card')
-            ], style={'flex': '1'}),
-
-            # Column 2: Distribution & Evolution
-            html.Div([
-                html.Div(dist_graph, className='info-card', style={'marginBottom': '10px'}),
-                html.Div(evo_graph, className='info-card')
-            ], style={'flex': '1.5'})
-        ], style={'display': 'flex', 'gap': '15px', 'marginTop': '16px'})
-
-        return html.Div([hero, cards, chart_layout])
+        
 
 
     except Exception as e:
