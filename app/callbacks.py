@@ -2298,13 +2298,13 @@ def close_drivers_driver(n_clicks):
 
 @callback(
     Output('drivers-content', 'children'),
-    Output('drivers-hero-container', 'children'),
-    Output('drivers-stats-cards-container', 'children'),
+    Output('drivers-hero-content', 'children'),
+    Output('drivers-stats-cards', 'children'),
     Output('graph-radial', 'figure'),
     Output('graph-donut', 'figure'),
     Output('graph-dist', 'figure'),
     Output('graph-evo', 'figure'),
-    Output('drivers-graphs-container', 'style'),
+    Output('drivers-graphs-grid', 'style'),
     Input('drivers-store-driver', 'data'),
     Input('drivers-store-year', 'data'),
 )
@@ -2494,7 +2494,7 @@ def update_drivers_content(driver, year):
         # Return the components (Hero and Cards still use your helper functions but as direct outputs)
         return hero, cards, fig_radial, fig_dist, fig_donut, fig_evo, {'display': 'flex', 'gap': '15px', 'marginTop': '16px'}
 
-        
+
 
 
     except Exception as e:
