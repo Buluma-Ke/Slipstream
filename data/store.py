@@ -1,22 +1,26 @@
+# app/db/store.py
+import os
 import duckdb
+import pandas as pd
 from pathlib import Path
 
 DB_PATH = Path("./data/f1.duckdb")
 
-
-
-
-def get_connection():
-    """Return a DuckDB connection to the local database file."""
-    return duckdb.connect(str(DB_PATH))
+def get_connection(read_only=False):
+    """
+    Return a DuckDB connection.
+    Use read_only=True inside Dash callbacks to prevent file-locking conflicts.
+    """
+    # Ensure the data directory directory exists safely
+    DB_PATH.parent.mkdir(parents=True, exist_ok=True)
+    return duckdb.connect(str(DB_PATH), read_only=read_only)
 
 
 def init_db():
-    """
-    Create the core tables if they don't exist.
-    Run this once before using any other function.
-    """
-    con = get_connection()
+    """Initializes tables for laps, final race results, and loading logs."""
+    con = get_connection(read_only=False)
+
+    # 1. Procedural Laps Table
     con.execute("""
         CREATE TABLE IF NOT EXISTS laps (
             year             INTEGER,
@@ -35,6 +39,24 @@ def init_db():
             UNIQUE (year, event_name, session_type, driver, lap_number)
         )
     """)
+
+    # 2. Race Results Table (Essential for Standings, Home, & Analytics)
+    con.execute("""
+        CREATE TABLE IF NOT EXISTS race_results (
+            year          INTEGER,
+            event_name    VARCHAR,
+            driver        VARCHAR,
+            full_name     VARCHAR,
+            team          VARCHAR,
+            position      INTEGER,
+            points        DOUBLE,
+            grid_position INTEGER,
+            status        VARCHAR,
+            UNIQUE (year, event_name, driver)
+        )
+    """)
+
+    # 3. Cache Directory Index Log
     con.execute("""
         CREATE TABLE IF NOT EXISTS sessions_loaded (
             year         INTEGER,
@@ -44,130 +66,112 @@ def init_db():
         )
     """)
     con.close()
-    print("Database ready.")
+    print("Database structures verified and ready.")
 
 
-
-
-def save_laps(laps, year, event_name, session_type):
-    """
-    Persist a session's lap data to DuckDB.
-    Skips silently if this session is already stored.
-
-    Args:
-        laps:         DataFrame returned by loader.get_laps()
-        year:         Season year, e.g. 2023
-        event_name:   Full event name, e.g. 'Bahrain Grand Prix'
-        session_type: 'R', 'Q', 'SQ', 'S', 'FP1', 'FP2', 'FP3'
-    """
-
-    con = get_connection()
-
-    # Check if we already have this session
+def is_session_loaded(year, event_name, session_type):
+    """Safely checks if a specific session layout is already present in cache."""
+    con = get_connection(read_only=True)
     already = con.execute("""
         SELECT 1 FROM sessions_loaded
         WHERE year=? AND event_name=? AND session_type=?
     """, [year, event_name, session_type]).fetchone()
+    con.close()
+    return already is not None
 
-    if already:
-        print(f"Already stored: {year} {event_name} {session_type}")
-        con.close()
+
+def save_session_data(year, event_name, session_type, laps_df=None, results_df=None):
+    """
+    Saves a session's lap metrics and final results down to the local file engine.
+    Safely wraps formatting transforms to isolate the interface.
+    """
+    if is_session_loaded(year, event_name, session_type):
+        print(f"⏩ Already stored: {year} {event_name} {session_type}")
         return
 
-    # Build a clean DataFrame to insert
-    import pandas as pd
+    con = get_connection(read_only=False)
 
-    insert_df = pd.DataFrame({
-        'year': year,
-        'event_name': event_name,
-        'session_type': session_type,
-        'driver': laps['Driver'],
-        'team': laps['Team'],
-        'lap_number': laps['LapNumber'],
-        'lap_time_sec': laps['LapTimeSec'],
-        's1_sec': laps['Sector1Time'].dt.total_seconds(),
-        's2_sec': laps['Sector2Time'].dt.total_seconds(),
-        's3_sec': laps['Sector3Time'].dt.total_seconds(),
-        'compound': laps['Compound'],
-        'tyre_life': laps['TyreLife'],
-        'is_personal_best': laps['IsPersonalBest'],
-    })
+    try:
+        # Step A: Parse and Append Laps data if available
+        if laps_df is not None and not laps_df.empty:
+            # Safe parsing transformations for timedelta to numeric floats
+            lap_time_converted = (laps_df['LapTime'].dt.total_seconds()
+                                  if 'LapTime' in laps_df.columns else laps_df.get('LapTimeSec'))
 
-    con.execute("INSERT INTO laps SELECT * FROM insert_df")
-    con.execute("""
-        INSERT INTO sessions_loaded (year, event_name, session_type)
-        VALUES (?, ?, ?)
-    """, [year, event_name, session_type])
+            insert_laps = pd.DataFrame({
+                'year': int(year),
+                'event_name': str(event_name),
+                'session_type': str(session_type),
+                'driver': laps_df['Driver'].astype(str),
+                'team': laps_df['Team'].astype(str),
+                'lap_number': laps_df['LapNumber'].astype(int),
+                'lap_time_sec': pd.to_numeric(lap_time_converted, errors='coerce'),
+                's1_sec': pd.to_numeric(laps_df['Sector1Time'].dt.total_seconds(), errors='coerce'),
+                's2_sec': pd.to_numeric(laps_df['Sector2Time'].dt.total_seconds(), errors='coerce'),
+                's3_sec': pd.to_numeric(laps_df['Sector3Time'].dt.total_seconds(), errors='coerce'),
+                'compound': laps_df['Compound'].astype(str),
+                'tyre_life': laps_df['TyreLife'].fillna(0).astype(int),
+                'is_personal_best': laps_df['IsPersonalBest'].fillna(False).astype(bool),
+            })
+            con.execute("INSERT INTO laps SELECT * FROM insert_laps")
 
-    con.close()
-    print(f"Saved {len(insert_df)} laps for {year} {event_name} {session_type}")
+        # Step B: Parse and Append Results data if available (Crucial for Home Page/Standings)
+        if results_df is not None and not results_df.empty:
+            insert_results = pd.DataFrame({
+                'year': int(year),
+                'event_name': str(event_name),
+                'driver': results_df['Abbreviation'].astype(str),
+                'full_name': results_df['FullName'].astype(str),
+                'team': results_df['TeamName'].astype(str),
+                'position': pd.to_numeric(results_df['Position'], errors='coerce').fillna(99).astype(int),
+                'points': pd.to_numeric(results_df['Points'], errors='coerce').fillna(0.0).astype(float),
+                'grid_position': pd.to_numeric(results_df['GridPosition'], errors='coerce').fillna(0).astype(int),
+                'status': results_df['Status'].astype(str),
+            })
+            con.execute("INSERT INTO race_results SELECT * FROM insert_results")
+
+        # Step C: Log successful process completion inside track index
+        con.execute("""
+            INSERT INTO sessions_loaded (year, event_name, session_type)
+            VALUES (?, ?, ?)
+        """, [year, event_name, session_type])
+        print(f"✅ Successfully written: {year} {event_name} ({session_type})")
+
+    except Exception as e:
+        print(f"❌ Transaction failure occurred during session insertion: {e}")
+    finally:
+        con.close()
 
 
-
-
-def query_laps(year=None, event_name=None, session_type=None, driver=None):
-    """
-    Query lap data from DuckDB with optional filters.
-    All parameters are optional — omit any to get broader results.
-
-    Args:
-        year:         Filter by season, e.g. 2023
-        event_name:   Filter by event, e.g. 'Bahrain Grand Prix'
-        session_type: Filter by session, e.g. 'R', 'Q', 'S', 'SQ', 'FP1', 'FP2', 'FP3'
-        driver:       Filter by driver code, e.g. 'VER'
-
-    Returns:
-        pandas DataFrame of matching laps
-    """
-    con = get_connection()
-
-    clauses = ["1=1"]
-    params = []
+def query_race_results(year=None, event_name=None):
+    """Retrieves fast, read-only historical race outcome frameworks."""
+    con = get_connection(read_only=True)
+    clauses, params = ["1=1"], []
 
     if year:
-        clauses.append("year = ?")
-        params.append(year)
+        clauses.append("year = ?"), params.append(int(year))
     if event_name:
-        clauses.append("event_name = ?")
-        params.append(event_name)
-    if session_type:
-        clauses.append("session_type = ?")
-        params.append(session_type)
-    if driver:
-        clauses.append("driver = ?")
-        params.append(driver)
+        clauses.append("event_name = ?"), params.append(str(event_name))
 
-    where = " AND ".join(clauses)
-    df = con.execute(f"SELECT * FROM laps WHERE {where}", params).df()
+    df = con.execute(f"SELECT * FROM race_results WHERE {' AND '.join(clauses)}", params).df()
     con.close()
     return df
 
 
+def query_laps(year=None, event_name=None, session_type=None, driver=None):
+    """Queries structural lap historical arrays using lightweight file connection locks."""
+    con = get_connection(read_only=True)
+    clauses, params = ["1=1"], []
 
+    if year:
+        clauses.append("year = ?"), params.append(int(year))
+    if event_name:
+        clauses.append("event_name = ?"), params.append(str(event_name))
+    if session_type:
+        clauses.append("session_type = ?"), params.append(str(session_type))
+    if driver:
+        clauses.append("driver = ?"), params.append(str(driver))
 
-# if __name__ == "__main__":
-#     con = get_connection()
-
-#     print("\n--- Sessions stored ---")
-#     print(con.execute("SELECT * FROM sessions_loaded").df())
-
-#     print("\n--- Total laps ---")
-#     print(con.execute("SELECT COUNT(*) as total_laps FROM laps").df())
-
-#     print("\n--- Avg pace per driver ---")
-#     print(con.execute("""
-#         SELECT driver, COUNT(*) as laps, ROUND(AVG(lap_time_sec), 3) as avg_lap
-#         FROM laps
-#         GROUP BY driver
-#         ORDER BY avg_lap
-#     """).df().to_string())
-
-#     print("\n--- Compound breakdown ---")
-#     print(con.execute("""
-#         SELECT compound, COUNT(*) as laps, ROUND(AVG(lap_time_sec), 3) as avg_lap
-#         FROM laps
-#         GROUP BY compound
-#         ORDER BY avg_lap
-#     """).df().to_string())
-
-#     con.close()
+    df = con.execute(f"SELECT * FROM laps WHERE {' AND '.join(clauses)}", params).df()
+    con.close()
+    return df
