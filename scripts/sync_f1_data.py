@@ -1,6 +1,16 @@
 # scripts/sync_f1_data.py
+
+import sys
+import os
+from pathlib import Path
+
+root_path = Path(__file__).resolve().parent.parent
+sys.path.append(str(root_path))
+
 import fastf1
 from data.store import save_session_data, is_session_loaded
+
+
 
 def sync_season(year):
     print(f"🏁 Syncing Season {year}...")
