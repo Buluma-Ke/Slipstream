@@ -1,7 +1,11 @@
 import dash
 import dash_bootstrap_components as dbc
-from app.layout import build_layout
 import app.callbacks
+from app.layout import build_layout
+from data.store import init_db
+
+# initialize db
+init_db()
 
 app = dash.Dash(
     __name__,
