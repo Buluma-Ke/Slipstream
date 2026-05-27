@@ -1,7 +1,7 @@
 # In your callbacks file
 from app.analytics.home import get_homepage_data
-from app.components.tables import build_driver_table
-from dash import callback, Output, Input, State, ctx
+from app.components.tables import build_driver_table, build_team_table
+from dash import callback, Output, Input
 
 @callback(
     Output('home-stat-champion', 'children'),
@@ -38,15 +38,19 @@ def update_home(year):
     # Build Tables (Use your existing row-building logic here)
     # Just pass data['driver_standings'] and data['team_standings'] to your helper functions
     drivers_table = build_driver_table(data['driver_standings'])
-    teams_table = build_team_table(data['team_standings'])
+    constructors_table = build_team_table(data['team_standings'])
 
     return (
-        champion_name, champion_pts,
-        team_name, team_pts,
-        str(data['total_races']),
-        str(data['wins'][1]), data['wins'][0],
-        str(data['poles'][1]), data['poles'][0],
-        str(data['dnfs'][1]), data['dnfs'][0],
-        drivers_table,
-        teams_table
-    )
+            champion_name,
+            f'{champion_pts} pts',
+            team_name,
+            f'{team_pts} pts',
+            str(data['total_races']),
+            str(data['wins'][1]), data['wins'][0],  # Most wins count and driver
+            str(data['poles'][1]), data['poles'][0], # Most poles count and driver
+            data.get('closest_gap', '—'),            # Closest finish string
+            data.get('closest_event', '—'),          # Closest event name
+            str(data['dnfs'][1]), data['dnfs'][0],  # Most DNFs count and driver
+            drivers_table,
+            constructors_table,
+        )

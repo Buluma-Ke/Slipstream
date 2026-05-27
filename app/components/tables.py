@@ -69,3 +69,59 @@ def build_driver_table(df):
         ])),
         html.Tbody(driver_rows),
     ], className='champ-table')
+
+
+# app/components/tables.py (continued)
+
+def build_team_table(df):
+    """
+    Transforms the team standings DataFrame into a Dash HTML Table.
+    """
+    if df is None or df.empty:
+        return html.Div("No constructor data available.", className='no-data-msg')
+
+    # Ensure sorting and add rank
+    df = df.copy()
+    df['Pos'] = range(1, len(df) + 1)
+
+    team_rows = []
+    for _, row in df.iterrows():
+        team_name = row['TeamName']
+        team_color = TEAM_COLORS.get(team_name, '#444')
+        logo_file = TEAM_LOGOS.get(team_name, None)
+        pos = int(row['Pos'])
+
+        team_rows.append(
+            html.Tr([
+                # Position
+                html.Td(str(pos), className='pos'),
+
+                # Team Logo
+                html.Td(
+                    html.Img(
+                        src=f'/assets/logos/{logo_file}.avif',
+                        style={'height': '16px', 'width': '28px', 'objectFit': 'contain'}
+                    ) if logo_file else html.Div(
+                        style={'width': '4px', 'height': '20px', 'background': team_color, 'margin': '0 auto'}
+                    ),
+                    style={'width': '32px', 'padding': '0 4px'},
+                ),
+
+                # Team Name
+                html.Td(team_name, className='team-name-cell'),
+
+                # Points
+                html.Td(f"{int(row['Points'])}", className='pts'),
+            ],
+            className='p1-row' if pos == 1 else 'standard-row')
+        )
+
+    return html.Table([
+        html.Thead(html.Tr([
+            html.Th('POS'),
+            html.Th(''),
+            html.Th('TEAM'),
+            html.Th('PTS'),
+        ])),
+        html.Tbody(team_rows),
+    ], className='champ-table')
