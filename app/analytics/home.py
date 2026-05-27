@@ -1,110 +1,55 @@
 # app/analytics/home.py
 import pandas as pd
-from store import get_connection
+from data.store import get_connection
 
-def get_season_overview_stats(year: int) -> dict:
-    """
-    Calculates high-level season metrics directly from the local DuckDB cache.
-    Returns a clean dictionary ready for Dash UI cards.
-    """
+def get_homepage_data(year):
     con = get_connection(read_only=True)
+    year = int(year)
 
-    # 1. Total unique races run so far
-    total_races = con.execute("""
-        SELECT COUNT(DISTINCT event_name)
-        FROM race_results
-        WHERE year = ?
-    """, [year]).fetchone()[0]
+    try:
+        # 1. Basic Counts
+        total_races = con.execute("SELECT COUNT(DISTINCT event_name) FROM race_results WHERE year=?", [year]).fetchone()[0]
 
-    if total_races == 0:
-        con.close()
+        if total_races == 0:
+            return None
+
+        # 2. Standings & Champions
+        driver_standings = con.execute("""
+            SELECT driver as Abbreviation, full_name as FullName, team as TeamName, SUM(points) as Points
+            FROM race_results WHERE year=? GROUP BY 1, 2, 3 ORDER BY Points DESC
+        """, [year]).df()
+
+        team_standings = con.execute("""
+            SELECT team as TeamName, SUM(points) as Points
+            FROM race_results WHERE year=? GROUP BY 1 ORDER BY Points DESC
+        """, [year]).df()
+
+        # 3. Facts (Wins, Poles, DNFs)
+        most_wins = con.execute("""
+            SELECT driver, COUNT(*) as count FROM race_results
+            WHERE year=? AND position=1 GROUP BY 1 ORDER BY count DESC LIMIT 1
+        """, [year]).fetchone()
+
+        most_poles = con.execute("""
+            SELECT driver, COUNT(*) as count FROM race_results
+            WHERE year=? AND grid_position=1 GROUP BY 1 ORDER BY count DESC LIMIT 1
+        """, [year]).fetchone()
+
+        most_dnfs = con.execute("""
+            SELECT driver, COUNT(*) as count FROM race_results
+            WHERE year=? AND status NOT IN ('Finished', '+1 Lap', '+2 Laps')
+            GROUP BY 1 ORDER BY count DESC LIMIT 1
+        """, [year]).fetchone()
+
         return {
-            "total_races": 0,
-            "driver_leader": "—",
-            "driver_points": 0,
-            "team_leader": "—",
-            "team_points": 0,
-            "most_wins_driver": "—",
-            "most_wins_count": 0,
-            "most_poles_driver": "—",
-            "most_poles_count": 0
+            'total_races': total_races,
+            'driver_standings': driver_standings,
+            'team_standings': team_standings,
+            'champion': driver_standings.iloc[0].to_dict() if not driver_standings.empty else {},
+            'constructor': team_standings.iloc[0].to_dict() if not team_standings.empty else {},
+            'wins': most_wins or ('—', 0),
+            'poles': most_poles or ('—', 0),
+            'dnfs': most_dnfs or ('—', 0)
         }
-
-    # 2. Top Driver Standings Leader
-    driver_leader = con.execute("""
-        SELECT driver, SUM(points) as total_pts
-        FROM race_results
-        WHERE year = ?
-        GROUP BY driver
-        ORDER BY total_pts DESC
-        LIMIT 1
-    """, [year]).fetchone()
-
-    # 3. Top Constructor Standings Leader
-    team_leader = con.execute("""
-        SELECT team, SUM(points) as total_pts
-        FROM race_results
-        WHERE year = ?
-        GROUP BY team
-        ORDER BY total_pts DESC
-        LIMIT 1
-    """, [year]).fetchone()
-
-    # 4. Driver with the most Grand Prix wins (Position = 1)
-    most_wins = con.execute("""
-        SELECT driver, COUNT(*) as win_count
-        FROM race_results
-        WHERE year = ? AND position = 1
-        GROUP BY driver
-        ORDER BY win_count DESC
-        LIMIT 1
-    """, [year]).fetchone()
-
-    # 5. Driver with the most Pole Positions (GridPosition = 1 from laps or results)
-    most_poles = con.execute("""
-        SELECT driver, COUNT(*) as pole_count
-        FROM race_results
-        WHERE year = ? AND grid_position = 1
-        GROUP BY driver
-        ORDER BY pole_count DESC
-        LIMIT 1
-    """, [year]).fetchone()
-
-    con.close()
-
-    return {
-        "total_races": total_races,
-        "driver_leader": driver_leader[0] if driver_leader else "—",
-        "driver_points": round(driver_leader[1], 1) if driver_leader else 0,
-        "team_leader": team_leader[0] if team_leader else "—",
-        "team_points": round(team_leader[1], 1) if team_leader else 0,
-        "most_wins_driver": most_wins[0] if most_wins else "—",
-        "most_wins_count": most_wins[1] if most_wins else 0,
-        "most_poles_driver": most_poles[0] if most_poles else "—",
-        "most_poles_count": most_poles[1] if most_poles else 0
-    }
-
-
-def get_season_pace_ranking(year: int) -> pd.DataFrame:
-    """
-    Computes an aggregated season-long pace ranking using median lap times
-    across normal track conditions, returning a lightweight summary DataFrame.
-    """
-    con = get_connection(read_only=True)
-
-    # Run a clean columnar aggregation across all cached laps for the season
-    # We filter out slow laps (> 100 seconds is an easy threshold, or use median bounds)
-    df_pace = con.execute("""
-        SELECT
-            driver,
-            team,
-            COUNT(lap_number) as total_laps_analyzed,
-            ROUND(MEDIAN(lap_time_sec), 3) as median_lap_time
-        FROM laps
-        WHERE year = ? AND lap_time_sec IS NOT NULL AND lap_time_sec < 120
-        GROUP BY driver, team
-        ORDER BY median_lap_time ASC
-    """, [year]).df()
-
-    con.close()
-    return df_pace
+    finally:
+        con.close()
