@@ -1,5 +1,6 @@
 # In your callbacks file
 from app.analytics.home import get_homepage_data
+from app.components.tables import build_driver_table
 from dash import callback, Output, Input, State, ctx
 
 @callback(
