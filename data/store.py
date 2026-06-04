@@ -52,6 +52,7 @@ def init_db():
             points        DOUBLE,
             grid_position INTEGER,
             status        VARCHAR,
+            time_seconds  DOUBLE,
             UNIQUE (year, event_name, driver)
         )
     """)
@@ -117,6 +118,14 @@ def save_session_data(year, event_name, session_type, laps_df=None, results_df=N
 
         # Step B: Parse and Append Results data if available (Crucial for Home Page/Standings)
         if results_df is not None and not results_df.empty:
+
+            # Safe parsing transformations for race final time delta to float seconds
+            res_time_converted = (
+                results_df['Time'].dt.total_seconds()
+                if 'Time' in results_df.columns and hasattr(results_df['Time'], 'dt')
+                else pd.to_timedelta(results_df.get('Time')).dt.total_seconds()
+            )
+
             insert_results = pd.DataFrame({
                 'year': int(year),
                 'event_name': str(event_name),
@@ -127,6 +136,7 @@ def save_session_data(year, event_name, session_type, laps_df=None, results_df=N
                 'points': pd.to_numeric(results_df['Points'], errors='coerce').fillna(0.0).astype(float),
                 'grid_position': pd.to_numeric(results_df['GridPosition'], errors='coerce').fillna(0).astype(int),
                 'status': results_df['Status'].astype(str),
+                'time_seconds': pd.to_numeric(res_time_converted, errors='coerce'),
             })
             con.execute("INSERT INTO race_results SELECT * FROM insert_results")
 

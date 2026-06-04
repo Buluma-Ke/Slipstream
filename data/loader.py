@@ -7,12 +7,13 @@ CACHE_DIR.mkdir(parents=True, exist_ok=True)
 fastf1.Cache.enable_cache(str(CACHE_DIR))
 
 
-def get_session(year, event, session_type="R"):
-    # Fetch -> load -> return
-    session = fastf1.get_session(year, event, session_type)
-    session.load()
 
+def get_session(year, event, session_type="R"):
+    session = fastf1.get_session(year, event, session_type)
+    # This specifically loads the data into the object
+    session.load(laps=True, telemetry=False, weather=False, messages=False)
     return session
+
 
 
 def get_laps(session):

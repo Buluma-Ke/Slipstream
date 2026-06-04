@@ -56,6 +56,8 @@ def close_on_outside(n_clicks):
     Output('home-fact-mostwins-sub', 'children'),
     Output('home-fact-poles', 'children'),
     Output('home-fact-poles-sub', 'children'),
+    Output('home-fact-closest', 'children'),
+    Output('home-fact-closest-sub', 'children'),
     Output('home-fact-dnf', 'children'),
     Output('home-fact-dnf-sub', 'children'),
     Output('home-drivers-table', 'children'),
@@ -69,7 +71,13 @@ def update_home(year):
 
     if not data:
         # Return the "Empty State" tuple
-        return ('—', '0 pts', '—', '0 pts', '0', '0', '—', '0', '—', '—', '—', [], [])
+        return (
+            '—', '0 pts', '—', '0 pts', '0',
+            '0', '—',
+            '0', '—',
+            '—', '—',
+            '0', '—',
+            [], [])
 
     # Format Champion/Constructor cards
     champion_name = data['champion'].get('Abbreviation', '—')
@@ -91,10 +99,8 @@ def update_home(year):
             str(data['total_races']),
             str(data['wins'][1]), data['wins'][0],  # Most wins count and driver
             str(data['poles'][1]), data['poles'][0], # Most poles count and driver
-            # data.get('closest_gap', '—'),            # Closest finish string
-            # data.get('closest_event', '—'),
-            '_',
-            '_',       # Closest event name
+            data.get('closest_gap', '—'),            # Closest finish string
+            data.get('closest_event', '—'),     # Closest event name
             str(data['dnfs'][1]), data['dnfs'][0],  # Most DNFs count and driver
             drivers_table,
             constructors_table,
