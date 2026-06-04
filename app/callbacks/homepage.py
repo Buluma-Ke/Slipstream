@@ -1,7 +1,50 @@
-# In your callbacks file
+
 from app.analytics.home import get_homepage_data
 from app.components.tables import build_driver_table, build_team_table
-from dash import callback, Output, Input
+from dash import callback, Output, Input, State, ALL
+
+
+# --- Home year pill toggle ---
+@callback(
+    Output('year-pill-dropdown', 'style', allow_duplicate=True),
+    Output('year-pill-overlay', 'style', allow_duplicate=True),
+    Input('year-pill-toggle', 'n_clicks'),
+    State('year-pill-dropdown', 'style'),
+    prevent_initial_call=True,
+)
+def toggle_year_dropdown(n_clicks, current_style):
+    if isinstance(current_style, dict) and current_style.get('display') == 'none':
+        return {'display': 'block'}, {'display': 'block'}
+    return {'display': 'none'}, {'display': 'none'}
+
+
+# --- Home year pill select ---
+@callback(
+    Output('home-store-year', 'data'),
+    Output('pill-year-display', 'children'),
+    Output('year-pill-dropdown', 'style', allow_duplicate=True),
+    Input({'type': 'year-pill', 'index': ALL}, 'n_clicks'),
+    State({'type': 'year-pill', 'index': ALL}, 'id'),
+    prevent_initial_call=True,
+)
+def select_year(n_clicks, ids):
+    from dash import ctx
+    triggered = ctx.triggered_id
+    if not triggered:
+        return 2025, '2025', {'display': 'none'}
+    selected = triggered['index']
+    return selected, str(selected), {'display': 'none'}
+
+# --- Close dropdown on outside click ---
+@callback(
+    Output('year-pill-dropdown', 'style', allow_duplicate=True),
+    Output('year-pill-overlay', 'style'),
+    Input('year-pill-overlay', 'n_clicks'),
+    prevent_initial_call=True,
+)
+def close_on_outside(n_clicks):
+    return {'display': 'none'}, {'display': 'none'}
+
 
 @callback(
     Output('home-stat-champion', 'children'),
