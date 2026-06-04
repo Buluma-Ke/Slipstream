@@ -91,8 +91,10 @@ def update_home(year):
             str(data['total_races']),
             str(data['wins'][1]), data['wins'][0],  # Most wins count and driver
             str(data['poles'][1]), data['poles'][0], # Most poles count and driver
-            data.get('closest_gap', '—'),            # Closest finish string
-            data.get('closest_event', '—'),          # Closest event name
+            # data.get('closest_gap', '—'),            # Closest finish string
+            # data.get('closest_event', '—'),
+            '_',
+            '_',       # Closest event name
             str(data['dnfs'][1]), data['dnfs'][0],  # Most DNFs count and driver
             drivers_table,
             constructors_table,

@@ -25,14 +25,15 @@ def layout():
             html.Div('Season Overview', className='home-page-title'),
             html.Div([
                 html.Div([
-                DashIconify(icon='tabler:flag', width=14, 
+                DashIconify(icon='tabler:flag', width=14,
                             style={'marginRight': '6px', 'color': '#E8002D'}),
                     html.Span('Season', className='pill-label', style={'marginBottom': '0', 'marginRight': '8px'}),
                     html.Span(id='pill-year-display', children='2025'),
                 ], className='year-pill-single', id='year-pill-toggle'),
                 html.Div(
                     [html.Div(str(y), id={'type': 'year-pill', 'index': y},
-                            className='year-dropdown-item')
+                            className='year-dropdown-item',
+                            n_clicks=0)
                     for y in range(2025, 2017, -1)],
                     id='year-pill-dropdown',
                     className='year-pill-menu',
@@ -46,11 +47,11 @@ def layout():
 ),
             ], className='home-year-selector', style={'position': 'relative'}),
         ], className='home-top-row'),
-        
+
         # Row 1 — headline cards
         html.Div([
             html.Div([
-                DashIconify(icon='tabler:star', width=22, 
+                DashIconify(icon='tabler:star', width=22,
                     className='card-icon', color='#5B88B2'),
                 html.Div('Champion', className='card-label'),
                 html.Div('—', className='card-value large', id='home-stat-champion'),
@@ -58,7 +59,7 @@ def layout():
             ], className='info-card accent-gold'),
 
             html.Div([
-                DashIconify(icon='tabler:building-factory', width=22, 
+                DashIconify(icon='tabler:building-factory', width=22,
                     className='card-icon', color='#5B88B2'),
                 html.Div('Winning Constructor', className='card-label'),
                 html.Div('—', className='card-value', id='home-stat-constructor'),
@@ -77,7 +78,7 @@ def layout():
         # Row 2 — fun fact cards
         html.Div([
             html.Div([
-                DashIconify(icon='tabler:podium', width=22, 
+                DashIconify(icon='tabler:podium', width=22,
                     className='card-icon', color='#5B88B2'),
                 html.Div('Most Wins', className='card-label'),
                 html.Div('—', className='card-value', id='home-fact-mostwins'),
@@ -85,7 +86,7 @@ def layout():
             ], className='info-card'),
 
             html.Div([
-                DashIconify(icon='tabler:clock-bolt', width=22, 
+                DashIconify(icon='tabler:clock-bolt', width=22,
                     className='card-icon', color='#5B88B2'),
                 html.Div('Most Pole Positions', className='card-label'),
                 html.Div('—', className='card-value', id='home-fact-poles'),
@@ -93,7 +94,7 @@ def layout():
             ], className='info-card'),
 
             html.Div([
-                DashIconify(icon='tabler:arrows-diff', width=22, 
+                DashIconify(icon='tabler:arrows-diff', width=22,
                     className='card-icon', color='#5B88B2'),
                 html.Div('Closest Finish', className='card-label'),
                 html.Div('—', className='card-value', id='home-fact-closest'),
@@ -127,3 +128,4 @@ def layout():
         ], className='tables-row'),
 
     ], className='home-wrapper')
+dcc.Store(id='home-store-year', data=2025)

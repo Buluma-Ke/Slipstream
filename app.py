@@ -1,6 +1,6 @@
 import dash
 import dash_bootstrap_components as dbc
-import app.callbacks
+from app.callbacks import homepage
 from app.layout import build_layout
 from data.store import init_db
 
