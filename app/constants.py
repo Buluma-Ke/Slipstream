@@ -46,6 +46,24 @@ TEAM_LOGOS = {
     'RB Formula One Team': 'rb-normalized-logo',
 }
 
-
 # -- How to Use Them Later --
 # from app.constants import TEAM_COLORS, TEAM_LOGOS
+
+def get_team_assets(team_name):
+    """
+    Safely retrieves the accent color and logo path for any given team name.
+    Includes fallbacks for unknown or unmapped teams.
+    """
+    if not team_name:
+        return '#B6BABD', '/assets/logos/default.avif'
+
+    name_clean = str(team_name).strip()
+
+    # Safe lookups with default fallbacks
+    color = TEAM_COLORS.get(name_clean, '#B6BABD') # Default gray if not found
+    logo_file = TEAM_LOGOS.get(name_clean, 'default-logo')
+
+    # Assuming your logos use a standard format like .avif or .png in assets
+    logo_path = f"/assets/logos/{logo_file}.avif"
+
+    return color, logo_path

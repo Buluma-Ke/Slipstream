@@ -93,7 +93,7 @@ def update_home(year):
 
     return (
             champion_name,
-            f'{champion_pts} pts',
+            f'{champion_pts}',
             team_name,
             f'{team_pts} pts',
             str(data['total_races']),

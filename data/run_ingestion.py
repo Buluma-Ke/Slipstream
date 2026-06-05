@@ -42,4 +42,4 @@ def populate_season(year):
 
 if __name__ == "__main__":
     # Run this for the 2025 season
-    populate_season(2025)
+    populate_season(2024)
