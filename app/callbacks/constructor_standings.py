@@ -2,9 +2,7 @@
 from dash import html, callback, Output, Input, State, ALL, ctx
 from app.analytics.constructor_standings import fetch_constructor_season_results, process_constructor_metrics
 import app.components.constructor_standings_ui as ui
-
-# Assumed global context asset dictionaries imported from configuration root
-from  constants import TEAM_COLORS, TEAM_LOGOS
+from  app.constants import TEAM_COLORS, TEAM_LOGOS
 
 @callback(
     Output('con-standings-year-dropdown', 'style', allow_duplicate=True),

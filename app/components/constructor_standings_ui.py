@@ -78,7 +78,7 @@ def build_constructor_table(standings: pd.DataFrame, wins: pd.Series, year: int,
     return html.Div([
         hero,
         html.Table([
-            html.OnRead(html.Tr([
+            html.Thead(html.Tr([
                 html.Th('POS'), html.Th(''), html.Th('TEAM'),
                 html.Th('WINS', style={'textAlign': 'center'}), html.Th('PTS'),
             ])),
