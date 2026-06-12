@@ -3,7 +3,6 @@ from dash_iconify import DashIconify
 
 
 
-
 def layout():
     return html.Div([
         # Header Row
@@ -17,7 +16,7 @@ def layout():
                               style={'marginBottom': '0', 'marginRight': '6px'}),
                     html.Span(id='drv-standings-pill-year', children='2025'),
                 ], className='year-pill-single', id='drv-standings-year-toggle'),
-                
+
                 html.Div(
                     [html.Div(str(y),
                               id={'type': 'drv-standings-year-pill', 'index': y},
@@ -27,7 +26,7 @@ def layout():
                     className='year-pill-menu',
                     style={'display': 'none'},
                 ),
-                
+
                 html.Div(id='drv-standings-year-overlay',
                          className='year-pill-overlay',
                          style={'display': 'none'}, n_clicks=0),
@@ -38,7 +37,7 @@ def layout():
         # Main Layout Grid
         html.Div([
             dcc.Store(id='drv-standings-data'),
-            
+
             # Left — standings table
             html.Div(
                 html.Div(id='drv-standings-content'),
@@ -47,8 +46,8 @@ def layout():
 
             # Right — evolution charts stacked
             dcc.Loading(
-                type='circle', 
-                color='#E8002D', 
+                type='circle',
+                color='#E8002D',
                 children=[
                     html.Div([
                         dcc.Graph(
@@ -74,7 +73,7 @@ def layout():
                 ),
                 dcc.Graph(id='drv-points-distribution',
                     config={'displayModeBar': False, 'responsive': True},
-                    style={'height': '600px', 'width': '100%'}), 
+                    style={'height': '600px', 'width': '100%'}),
             ], className='drv-stats-full'
             ),
 

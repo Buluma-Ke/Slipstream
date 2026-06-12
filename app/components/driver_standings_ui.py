@@ -1,7 +1,6 @@
 # app/components/driver_standings_ui.py
 from dash import html
 import plotly.graph_objects as go
-# Assuming constants are declared globally or inside an application config registry
 from app.constants import TEAM_COLORS, TEAM_LOGOS
 
 THEME_TRANSPARENT = dict(
