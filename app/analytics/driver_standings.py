@@ -1,55 +1,58 @@
 # app/analytics/driver_standings.py
-import fastf1
 import pandas as pd
-from data.store import get_connection  # Clean unified import path
+from data.store import get_connection
 
 def fetch_season_results(year: int) -> pd.DataFrame:
     """
-    Checks local DB for race results first. Falls back to FastF1
-    ONLY if no data rows exist for the selected season.
+    Checks local DB for race results. Dynamically generates
+    a chronological RoundNumber using a window function over event_name.
     """
     year = int(year)
 
-    # 1. Strict Local DB Target
-    #try:
-    con = get_connection(read_only=True)
-    db_df = con.execute("""
-            SELECT abbreviation, full_name, team_name, points, position, grid_position, status, round_number, event_name
-            FROM race_results
-            WHERE year = ?
+    try:
+        con = get_connection(read_only=True)
+
+        # DENSE_RANK() dynamically forces a sequential order to track chart evolution
+        db_df = con.execute("""
+            WITH ordered_events AS (
+                SELECT
+                    driver AS abbreviation,
+                    full_name,
+                    team,
+                    points,
+                    position,
+                    grid_position,
+                    status,
+                    event_name,
+                    DENSE_RANK() OVER (ORDER BY event_name) AS generated_round
+                FROM race_results
+                WHERE year = ?
+            )
+            SELECT
+                abbreviation,
+                full_name,
+                team,
+                points,
+                position,
+                grid_position,
+                status,
+                generated_round,
+                event_name
+            FROM ordered_events
         """, [year]).df()
-    con.close()
+        con.close()
 
-    if not db_df.empty:
-        # Rename columns to match existing downstream API properties seamlessly
-        db_df.columns = ['Abbreviation', 'FullName', 'TeamName', 'Points', 'Position', 'GridPosition', 'Status', 'RoundNumber', 'EventName']
-        return db_df
+        if not db_df.empty:
+            print(f"⚡ [DATABASE HIT] Loaded data rows for the {year} season.")
+            # Map column outputs smoothly to the expected interface names
+            db_df.columns = ['Abbreviation', 'FullName', 'TeamName', 'Points', 'Position', 'GridPosition', 'Status', 'RoundNumber', 'EventName']
+            return db_df
 
-    #except Exception as e:
-        # Crucial debug print so you can see EXACTLY why the DB query failed
-        #print(f"❌ Database Query Failed: {e}")
+    except Exception as e:
+        print(f"❌ Database Query Failed: {e}")
 
-    # 2. Cache-First Fallback API (Only hits if DB is empty or fails)
-    # print(f"🌐 [API FALLBACK] Pulling {year} from FastF1 engine...")
-    # schedule = fastf1.get_event_schedule(year, include_testing=False)
-    # races = schedule[schedule['EventFormat'] != 'testing'].reset_index(drop=True)
-    # results_list = []
-
-    # for _, event in races.iterrows():
-    #     try:
-    #         session = fastf1.get_session(year, event['RoundNumber'], 'R')
-    #         session.load(telemetry=False, weather=False, messages=False)
-    #         res = session.results
-    #         if res is None or len(res) == 0:
-    #             continue
-    #         res = res.copy()
-    #         res['RoundNumber'] = event['RoundNumber']
-    #         res['EventName'] = event['EventName']
-    #         results_list.append(res)
-    #     except Exception:
-    #         continue
-
-    # return pd.concat(results_list, ignore_index=True) if results_list else pd.DataFrame()
+    # Return empty DataFrame immediately if DB pull fails or has no rows
+    return pd.DataFrame()
 
 
 def process_driver_metrics(all_results: pd.DataFrame):
