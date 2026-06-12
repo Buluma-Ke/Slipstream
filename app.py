@@ -15,7 +15,7 @@ app = dash.Dash(
 
 app.layout = build_layout()
 
-from app.callbacks import homepage, schedule, navigation, driver_standings, constructor_standings
+from app.callbacks import homepage, schedule, navigation, driver_standings, constructor_standings, races
 
 if __name__ == '__main__':
     app.run(debug=True, port=8050, use_reloader=False)

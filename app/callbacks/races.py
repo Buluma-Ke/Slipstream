@@ -2,6 +2,7 @@
 import fastf1
 from dash import html, callback, Output, Input, State, ALL, ctx, no_update
 from dash.exceptions import PreventUpdate
+import plotly.graph_objects as go
 
 import app.analytics.races_data as data
 import app.components.races_ui as ui
