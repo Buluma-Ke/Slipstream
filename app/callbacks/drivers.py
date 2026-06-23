@@ -12,6 +12,9 @@ from app.components.drivers_ui import (
 TEAM_COLORS = {}
 TEAM_LOGOS = {}
 
+
+
+
 @callback(
     Output('drivers-year-pill-dropdown', 'style', allow_duplicate=True),
     Output('drivers-year-overlay', 'style', allow_duplicate=True),
@@ -23,6 +26,10 @@ def toggle_drivers_year(n_clicks, current_style):
     if isinstance(current_style, dict) and current_style.get('display') == 'none':
         return {'display': 'block'}, {'display': 'block'}
     return {'display': 'none'}, {'display': 'none'}
+
+
+
+
 
 @callback(
     Output('drivers-store-year', 'data'),
@@ -39,6 +46,10 @@ def select_drivers_year(n_clicks):
     selected = triggered['index']
     return selected, str(selected), {'display': 'none'}, {'display': 'none'}
 
+
+
+
+
 @callback(
     Output('drivers-year-pill-dropdown', 'style', allow_duplicate=True),
     Output('drivers-year-overlay', 'style', allow_duplicate=True),
@@ -47,6 +58,10 @@ def select_drivers_year(n_clicks):
 )
 def close_drivers_year(n_clicks):
     return {'display': 'none'}, {'display': 'none'}
+
+
+
+
 
 @callback(
     Output('drivers-driver-pill-dropdown', 'children'),
@@ -79,6 +94,9 @@ def toggle_drivers_driver(n_clicks, year, current_style):
     ]
     return items, {'display': 'block'}, {'display': 'block'}
 
+
+
+
 @callback(
     Output('drivers-store-driver', 'data'),
     Output('drivers-pill-driver-display', 'children'),
@@ -95,6 +113,8 @@ def select_drivers_driver(n_clicks):
     selected = triggered['index']
     return selected, selected, {'display': 'none'}, {'display': 'none'}
 
+
+
 @callback(
     Output('drivers-driver-pill-dropdown', 'style', allow_duplicate=True),
     Output('drivers-driver-overlay', 'style', allow_duplicate=True),
@@ -103,6 +123,8 @@ def select_drivers_driver(n_clicks):
 )
 def close_drivers_driver(n_clicks):
     return {'display': 'none'}, {'display': 'none'}
+
+
 
 @callback(
     Output('drivers-hero-content', 'children'),
@@ -117,24 +139,23 @@ def close_drivers_driver(n_clicks):
     Input('drivers-store-year', 'data'),
 )
 def update_drivers_content(driver, year):
+    # Fallback 1: Missing selection inputs (Returns exactly 8 elements)
     if not driver or not year:
         fallback_msg = html.Div('Select a season and driver.', style={'color': '#555', 'fontFamily': 'Titillium Web', 'fontSize': '0.8rem', 'padding': '20px'})
         return fallback_msg, None, go.Figure(), None, go.Figure(), go.Figure(), go.Figure(), {'display': 'none'}
 
     try:
-        #print(f"⚡ [DIAGNOSTIC] Fetching data for: Driver={driver}, Year={year}")
         drv_results = fetch_driver_season_results(year, driver)
-        #print(f"📊 [DIAGNOSTIC] Row count returned: {len(drv_results)}")
 
+        # Fallback 2: Dataframe from database is empty (Returns exactly 8 elements)
         if drv_results.empty:
             return html.Div(f'No data for {driver} in {year}.'), None, go.Figure(), None, go.Figure(), go.Figure(), go.Figure(), {'display': 'none'}
 
+        # Extract base strings directly from database dataframe row
         team = drv_results.iloc[-1]['Team']
         full_name = drv_results.iloc[-1]['FullName']
-        team_color = TEAM_COLORS.get(team, '#444')
-        logo_file = TEAM_LOGOS.get(team, None)
 
-        # Performance Calculations
+        # Core metric calculations
         wins = len(drv_results[drv_results['Position'] == 1])
         podiums = len(drv_results[drv_results['Position'] <= 3])
         points = int(drv_results['Points'].sum())
@@ -145,29 +166,31 @@ def update_drivers_content(driver, year):
         best_finish = int(drv_results['Position'].min()) if len(drv_results) > 0 else '—'
         avg_finish = round(drv_results['Position'].mean(), 1)
 
-        # UI Layout Construction
-        hero_node = render_driver_hero(year, full_name, team, team_color, logo_file)
+        # ⚡ Render Hero: Passing 'team' so component looks up its own color and logo assets
+        hero_node = render_driver_hero(year, full_name, team)
 
+        # ⚡ Render Stat Cards: Appended 'team' as the third argument to every function call
         cards_grid = html.Div([
-            make_stat_card('Grand Prix Wins', wins, 'Sprint wins not included', team_color, accent=True),
-            make_stat_card('Podiums', podiums, 'Sprint podiums not included'),
-            make_stat_card('Season Points', points, f'Avg. {avg_pts} per race'),
-            make_stat_card('Pole Positions', poles),
-            make_stat_card('Best Finish', f'P{best_finish}'),
-            make_stat_card('Avg Finish', f'P{avg_finish}'),
-            make_stat_card('DNFs', dnfs),
-            make_stat_card('Races', races_count),
+            make_stat_card('Grand Prix Wins', wins, team, 'Sprint wins not included', accent=True),
+            make_stat_card('Podiums', podiums, team, 'Sprint podiums not included'),
+            make_stat_card('Season Points', points, team, f'Avg. {avg_pts} per race'),
+            make_stat_card('Pole Positions', poles, team),
+            make_stat_card('Best Finish', f'P{best_finish}', team),
+            make_stat_card('Avg Finish', f'P{avg_finish}', team),
+            make_stat_card('DNFs', dnfs, team),
+            make_stat_card('Races', races_count, team),
         ], style={'display': 'grid', 'gridTemplateColumns': 'repeat(4, 1fr)', 'gap': '10px', 'marginBottom': '16px'})
 
-        # Graphic Assemblies
-        fig_radial, radial_legend = make_radial_bar_chart(drv_results, wins, podiums, dnfs, team_color)
+        # ⚡ Render Dynamic Chart Figures (All passing 'team' now)
+        fig_radial, radial_legend = make_radial_bar_chart(drv_results, wins, podiums, dnfs, team)
+        fig_dist = make_distribution_chart(drv_results, team)
+        fig_donut = make_points_donut(drv_results, team)
+        fig_evo = make_points_evolution(drv_results, team)
 
-        fig_dist = make_distribution_chart(drv_results, team_color)
-        fig_donut = make_points_donut(drv_results, team_color)
-        fig_evo = make_points_evolution(drv_results, team_color)
-
+        # Success return block satisfying length evaluation rule
         return hero_node, cards_grid, fig_radial, radial_legend, fig_dist, fig_donut, fig_evo, {'display': 'flex', 'gap': '15px', 'marginTop': '16px'}
 
     except Exception as e:
         print(f'❌ Drivers content runtime error: {e}')
-        return html.Div(f'Error processing data: {e}'), None, go.Figure(), go.Figure(), go.Figure(), go.Figure(), {'display': 'none'}
+        # Fallback 3: Error Catching block (Returns exactly 8 elements)
+        return html.Div(f'Error processing data: {e}'), None, go.Figure(), None, go.Figure(), go.Figure(), go.Figure(), {'display': 'none'}
