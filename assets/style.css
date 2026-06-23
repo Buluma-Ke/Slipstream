@@ -889,7 +889,7 @@ body::before {
 
 .drv-standings-layout::-webkit-scrollbar { width: 3px; }
 .drv-standings-layout::-webkit-scrollbar-track { background: transparent; }
-.drv-standings-layout::-webkit-scrollbar-thumb { 
+.drv-standings-layout::-webkit-scrollbar-thumb {
     background: rgba(91,136,178,0.2);
     border-radius: 2px;
 }
@@ -915,7 +915,7 @@ body::before {
     flex-direction: column;
     gap: 10px;
     grid-column: 2;
-    grid-row: 1; 
+    grid-row: 1;
 }
 
 @media (max-width: 600px) {
@@ -1038,6 +1038,58 @@ body::before {
         height: auto;
     }
     .standings-table-wrapper {
+        width: 100%;
+    }
+}
+
+
+
+
+
+/* ==========================================================================
+   Drivers Page Visualization Grid Layout (Desktop)
+   ========================================================================== */
+
+#drivers-graphs-grid {
+    display: flex !important;
+    flex-direction: row;
+    width: 100%;
+    gap: 16px;
+    margin-top: 16px;
+    box-sizing: border-box;
+}
+
+#drivers-graphs-grid > div:first-child {
+    flex: 0 0 35% !important;
+    min-width: 320px;
+}
+
+#drivers-graphs-grid > div:last-child {
+    flex: 1 1 65% !important;
+}
+
+#drivers-graphs-grid .info-card {
+    width: 100%;
+    box-sizing: border-box;
+}
+
+#drivers-graphs-grid .info-card .js-plotly-plot {
+    width: 100% !important;
+}
+
+/* ==========================================================================
+   Responsive Breakpoint (Tablet / Small Screens)
+   ========================================================================== */
+
+@media screen and (max-width: 1024px) {
+    #drivers-graphs-grid {
+        flex-direction: column-reverse !important;
+        gap: 16px;
+    }
+
+    #drivers-graphs-grid > div:first-child,
+    #drivers-graphs-grid > div:last-child {
+        flex: 1 1 100% !important;
         width: 100%;
     }
 }
