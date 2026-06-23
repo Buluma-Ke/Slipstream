@@ -1,7 +1,9 @@
 # app/components/drivers_ui.py
-from dash import html
+from dash import html, dcc
+
 import plotly.graph_objects as go
 import pandas as pd
+import numpy as np
 
 # Assume your shared layout dictionaries are imported here
 TRANSPARENT = dict(paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)')
@@ -23,7 +25,9 @@ def render_driver_hero(year: int, full_name: str, team: str, team_color: str, lo
               'background': f'linear-gradient(135deg, rgba(0,0,0,0.8), {team_color}22)', 'border': f'1px solid {team_color}44',
               'borderLeft': f'3px solid {team_color}', 'borderRadius': '6px', 'padding': '14px 16px', 'marginBottom': '16px'})
 
+
 def make_stat_card(label: str, value: any, sub: str = '', team_color: str = '#FBF9E4', accent: bool = False) -> html.Div:
+
     return html.Div([
         html.Div([
             html.Div(label, className='card-label'),
@@ -32,21 +36,83 @@ def make_stat_card(label: str, value: any, sub: str = '', team_color: str = '#FB
         ]),
     ], className='info-card')
 
-def make_radial_bar_chart(drv_results: pd.DataFrame, wins: int, podiums: int, dnfs: int, team_color: str) -> go.Figure:
+
+def make_radial_bar_chart(drv_results: pd.DataFrame, wins: int, podiums: int, dnfs: int, team_color: str):
     total_races = len(drv_results)
-    pts_finishes = len(drv_results[drv_results['Points'] > 0])
-    perf_metrics = {'Wins': {'val': wins, 'color': '#FFD700'}, 'Podiums': {'val': podiums, 'color': team_color},
-                    'In Points': {'val': pts_finishes, 'color': '#22D3EE'}, 'DNF/DSQ': {'val': dnfs, 'color': '#EF4444'}}
+    pts_finishes = len(drv_results[drv_results['Points'] > 0]) if not drv_results.empty else 0
+
+    perf_metrics = [
+        {'label': 'Wins', 'val': wins, 'color': '#FFD700', 'ring_level': 4},
+        {'label': 'Podiums', 'val': podiums, 'color': '#2563EB', 'ring_level': 3},
+        {'label': 'In Points', 'val': pts_finishes, 'color': '#CBD5E1', 'ring_level': 2},
+        {'label': 'DNF/DSQ', 'val': dnfs, 'color': '#DC2626', 'ring_level': 1}
+    ]
 
     fig = go.Figure()
-    for i, (label, data) in enumerate(perf_metrics.items()):
-        r_val = 100 - (i * 20)
-        fig.add_trace(go.Scatterpolar(r=[r_val, r_val], theta=[0, 360], mode='lines', line=dict(color='#222', width=12), hoverinfo='skip'))
-        percentage = (data['val'] / total_races) * 360 if total_races > 0 else 0
-        fig.add_trace(go.Scatterpolar(r=[r_val, r_val], theta=[0, percentage], mode='lines', line=dict(color=data['color'], width=12, shape='spline'), name=label))
+    starting_angle = 90  # 12 o'clock position
 
-    return fig.update_layout(polar=dict(hole=0.4, bgcolor='rgba(0,0,0,0)', radialaxis=dict(visible=False),
-                                        angularaxis=dict(visible=False)), showlegend=False, margin=dict(l=10, r=10, t=30, b=10), height=300, **TRANSPARENT)
+    for metric in perf_metrics:
+        r_radius = metric['ring_level']
+        pct = (metric['val'] / total_races) if total_races > 0 else 0
+        angular_width = pct * 360
+
+        # 1. Background Track
+        full_theta = np.linspace(0, 360, 100)
+        fig.add_trace(go.Scatterpolar(
+            r=[r_radius] * len(full_theta),
+            theta=full_theta,
+            mode='lines',
+            line=dict(color='#111827', width=10),
+            hoverinfo='skip',
+            showlegend=False
+        ))
+
+        # 2. Foreground Performance Arc
+        if metric['val'] > 0:
+            end_angle = starting_angle - angular_width
+            arc_theta = np.linspace(starting_angle, end_angle, max(2, int(angular_width)))
+
+            fig.add_trace(go.Scatterpolar(
+                r=[r_radius] * len(arc_theta),
+                theta=arc_theta,
+                mode='lines',
+                line=dict(
+                    color=metric['color'],
+                    width=10,
+                    shape='spline' # ⚡ Removed 'cmid=0' clean here
+                ),
+                hoverinfo='skip',
+                showlegend=False
+            ))
+
+
+    fig.update_layout(
+        polar=dict(
+            hole=0.2,
+            bgcolor='rgba(0,0,0,0)',
+            radialaxis=dict(visible=False, range=[0.6, 4.3]),
+            angularaxis=dict(visible=False, direction="clockwise", period=360)
+        ),
+        xaxis=dict(visible=False, showgrid=False, zeroline=False),
+        yaxis=dict(visible=False, showgrid=False, zeroline=False),
+        margin=dict(l=10, r=10, t=10, b=10),
+        height=260,
+        width=260,
+        **TRANSPARENT
+    )
+
+    # 3. Text Side-Legend Generation
+    legend_items = html.Div([
+        html.Div([
+            html.Div(style={'width': '12px', 'height': '12px', 'borderRadius': '50%', 'backgroundColor': m['color'], 'marginRight': '8px'}),
+            html.Span(f"{m['label']}: ", style={'color': '#888', 'fontSize': '0.85rem', 'fontFamily': 'Titillium Web'}),
+            html.Span(str(m['val']), style={'color': '#FFF', 'fontWeight': 'bold', 'marginLeft': '4px', 'fontFamily': 'Titillium Web'})
+        ], style={'display': 'flex', 'alignItems': 'center', 'marginBottom': '6px'})
+        for m in perf_metrics
+    ], style={'display': 'flex', 'flexDirection': 'column', 'justifyContent': 'center', 'paddingLeft': '20px'})
+
+    return fig, legend_items
+
 
 def make_distribution_chart(drv_results: pd.DataFrame, team_color: str) -> go.Figure:
     pos_counts = drv_results['Position'].value_counts().sort_index()

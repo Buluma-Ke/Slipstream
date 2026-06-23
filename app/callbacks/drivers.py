@@ -108,6 +108,7 @@ def close_drivers_driver(n_clicks):
     Output('drivers-hero-content', 'children'),
     Output('drivers-stats-cards', 'children'),
     Output('graph-radial', 'figure'),
+    Output('radial-legend-container', 'children'),
     Output('graph-dist', 'figure'),
     Output('graph-donut', 'figure'),
     Output('graph-evo', 'figure'),
@@ -118,12 +119,15 @@ def close_drivers_driver(n_clicks):
 def update_drivers_content(driver, year):
     if not driver or not year:
         fallback_msg = html.Div('Select a season and driver.', style={'color': '#555', 'fontFamily': 'Titillium Web', 'fontSize': '0.8rem', 'padding': '20px'})
-        return fallback_msg, None, go.Figure(), go.Figure(), go.Figure(), go.Figure(), {'display': 'none'}
+        return fallback_msg, None, go.Figure(), None, go.Figure(), go.Figure(), go.Figure(), {'display': 'none'}
 
     try:
+        #print(f"⚡ [DIAGNOSTIC] Fetching data for: Driver={driver}, Year={year}")
         drv_results = fetch_driver_season_results(year, driver)
+        #print(f"📊 [DIAGNOSTIC] Row count returned: {len(drv_results)}")
+
         if drv_results.empty:
-            return html.Div(f'No data for {driver} in {year}.'), None, go.Figure(), go.Figure(), go.Figure(), go.Figure(), {'display': 'none'}
+            return html.Div(f'No data for {driver} in {year}.'), None, go.Figure(), None, go.Figure(), go.Figure(), go.Figure(), {'display': 'none'}
 
         team = drv_results.iloc[-1]['Team']
         full_name = drv_results.iloc[-1]['FullName']
@@ -156,12 +160,13 @@ def update_drivers_content(driver, year):
         ], style={'display': 'grid', 'gridTemplateColumns': 'repeat(4, 1fr)', 'gap': '10px', 'marginBottom': '16px'})
 
         # Graphic Assemblies
-        fig_radial = make_radial_bar_chart(drv_results, wins, podiums, dnfs, team_color)
+        fig_radial, radial_legend = make_radial_bar_chart(drv_results, wins, podiums, dnfs, team_color)
+
         fig_dist = make_distribution_chart(drv_results, team_color)
         fig_donut = make_points_donut(drv_results, team_color)
         fig_evo = make_points_evolution(drv_results, team_color)
 
-        return hero_node, cards_grid, fig_radial, fig_dist, fig_donut, fig_evo, {'display': 'flex', 'gap': '15px', 'marginTop': '16px'}
+        return hero_node, cards_grid, fig_radial, radial_legend, fig_dist, fig_donut, fig_evo, {'display': 'flex', 'gap': '15px', 'marginTop': '16px'}
 
     except Exception as e:
         print(f'❌ Drivers content runtime error: {e}')

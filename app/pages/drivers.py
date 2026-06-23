@@ -50,12 +50,7 @@ def layout():
                       'alignItems': 'center', 'gap': '4px'}),
         ], className='home-top-row'),
 
-        # Content
-        dcc.Loading(type='circle', color='#E8002D',
-                    children=html.Div(id='drivers-content')),
-       # In drivers.py layout() function:
-
-        # Content
+        # Content Loader Wrapper Container
         dcc.Loading(type='circle', color='#E8002D', children=[
             # Hero and Stats section
             html.Div(id='drivers-hero-content'),
@@ -65,7 +60,15 @@ def layout():
             html.Div([
                 # Column 1
                 html.Div([
-                    html.Div([html.Div("Season Performance", className='card-label'), dcc.Graph(id='graph-radial', config={'displayModeBar': False})], className='info-card', style={'marginBottom': '10px'}),
+                    html.Div([
+                        html.Div("Season Performance", className='card-label'),
+                        # ⚡ Flex container grouping Graph + clean text legend
+                        html.Div([
+                            dcc.Graph(id='graph-radial', config={'displayModeBar': False}, style={'width': '260px'}),
+                            html.Div(id='radial-legend-container')
+                        ], style={'display': 'flex', 'alignItems': 'center', 'justifyContent': 'center', 'width': '100%'})
+                    ], className='info-card', style={'marginBottom': '10px'}),
+
                     html.Div([html.Div("Finish Positions in Points", className='card-label'), dcc.Graph(id='graph-donut', config={'displayModeBar': False})], className='info-card'),
                 ], style={'flex': '1'}),
 
@@ -74,7 +77,7 @@ def layout():
                     html.Div([html.Div("Finish Positions Distribution", className='card-label'), dcc.Graph(id='graph-dist', config={'displayModeBar': False})], className='info-card', style={'marginBottom': '10px'}),
                     html.Div([html.Div("Points Evolution", className='card-label'), dcc.Graph(id='graph-evo', config={'displayModeBar': False})], className='info-card'),
                 ], style={'flex': '1.5'})
-            ], id='drivers-graphs-grid', style={'display': 'none'}) # Hidden until data is ready
+            ], id='drivers-graphs-grid', style={'display': 'none'})
         ]),
 
     ], className='home-wrapper')
