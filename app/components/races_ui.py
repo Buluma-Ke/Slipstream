@@ -152,11 +152,21 @@ def make_lap_times_strip_chart(clean_laps: pd.DataFrame, driver_order: list, TEA
         margin=dict(l=80, r=20, t=40, b=20),
     )
 
-
 def make_position_evolution_chart(laps: pd.DataFrame, TEAM_COLORS: dict) -> go.Figure:
     fig_pos = go.Figure()
-    pos_laps = laps.dropna(subset=['Position']).copy()
-    if pos_laps.empty: return fig_pos.update_layout(**TRANSPARENT)
+    if laps.empty:
+        return fig_pos.update_layout(**TRANSPARENT)
+
+    # Reconstruct live race position using cumulative elapsed time
+    pos_laps = laps.sort_values(['Driver', 'LapNumber']).copy()
+    pos_laps['CumulativeTime'] = pos_laps.groupby('Driver')['LapTimeSec'].cumsum()
+
+    # Rank drivers on each lap number based on who got there first
+    pos_laps['Position'] = pos_laps.groupby('LapNumber')['CumulativeTime'].rank(method='min', ascending=True)
+
+    pos_laps = pos_laps.dropna(subset=['Position'])
+    if pos_laps.empty:
+        return fig_pos.update_layout(**TRANSPARENT)
 
     pos_laps['Position'] = pos_laps['Position'].astype(int)
     total_max_laps = pos_laps['LapNumber'].max()
@@ -187,7 +197,7 @@ def make_position_evolution_chart(laps: pd.DataFrame, TEAM_COLORS: dict) -> go.F
     max_pos = int(pos_laps['Position'].max())
     return fig_pos.update_layout(
         **TRANSPARENT, autosize=True,
-        title=dict(text='Position Evolution', font=dict(color='#444', size=13)),
+        title=dict(text='Position Evolution (Reconstructed)', font=dict(color='#444', size=13)),
         xaxis=AXIS | dict(range=[1, total_max_laps + 1]),
         yaxis=AXIS | dict(autorange=False, range=[max_pos + 0.3, 0.7], dtick=1, tick0=1, tickmode='linear'),
         margin=dict(l=40, r=60, t=40, b=20),
@@ -196,28 +206,32 @@ def make_position_evolution_chart(laps: pd.DataFrame, TEAM_COLORS: dict) -> go.F
 
 def make_speed_trap_heatmap(laps: pd.DataFrame) -> go.Figure:
     fig = go.Figure()
-    speed_data = laps.dropna(subset=['SpeedST']).copy()
-    if speed_data.empty: return fig.update_layout(**TRANSPARENT)
+    if laps.empty:
+        return fig.update_layout(**TRANSPARENT)
 
-    speed_data['SpeedST'] = speed_data['SpeedST'].astype(int)
-    speed_data['SpeedRank'] = speed_data.groupby('Driver')['SpeedST'].rank(method='first', ascending=False)
+    # Reuse the heatmap matrix approach to plot the Top 20 Fastest Laps per Driver instead
+    lap_data = laps.dropna(subset=['LapTimeSec']).copy()
+    lap_data['LapRank'] = lap_data.groupby('Driver')['LapTimeSec'].rank(method='first', ascending=True)
 
-    top_20_speeds = speed_data[speed_data['SpeedRank'] <= 20].copy()
-    speed_pivot = top_20_speeds.pivot(index='Driver', columns='SpeedRank', values='SpeedST')
+    top_20_laps = lap_data[lap_data['LapRank'] <= 20].copy()
 
-    driver_best = speed_pivot[1.0].sort_values(ascending=False)
-    speed_pivot = speed_pivot.reindex(driver_best.index)
+    # Pivot into a Driver vs Pace Grid
+    pace_pivot = top_20_laps.pivot(index='Driver', columns='LapRank', values='LapTimeSec')
+
+    # Sort drivers by who has the absolute fastest single lap time
+    driver_best = pace_pivot[1.0].sort_values(ascending=True)
+    pace_pivot = pace_pivot.reindex(driver_best.index)
 
     fig.add_trace(go.Heatmap(
-        z=speed_pivot.values, x=speed_pivot.columns, y=speed_pivot.index,
-        colorscale='Reds', showscale=False, text=speed_pivot.values,
-        texttemplate="%{text}", textfont={"size": 10, "family": "Titillium Web"},
+        z=pace_pivot.values, x=pace_pivot.columns, y=pace_pivot.index,
+        colorscale='Blues_r', showscale=False, text=pace_pivot.round(2).values,
+        texttemplate="%{text}s", textfont={"size": 9, "family": "Titillium Web"},
         hoverongaps=False, xgap=1, ygap=1
     ))
 
     return fig.update_layout(
         **TRANSPARENT, height=500, width=800,
-        title=dict(text='Top 20 Speed Trap Speeds per Driver (km/h)', font=dict(color='#444', size=13)),
+        title=dict(text='Top 20 Fastest Laps per Driver (Seconds)', font=dict(color='#444', size=13)),
         xaxis=dict(visible=False),
         yaxis=AXIS | dict(autorange='reversed', tickfont=dict(color='#444', size=10)),
         margin=dict(l=50, r=10, t=30, b=10),
