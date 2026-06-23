@@ -37,24 +37,48 @@ def _get_team_assets(raw_team_string: str):
 
 
 def render_driver_hero(year: int, full_name: str, team: str) -> html.Div:
-    # Look up variables directly from constants matching structural requirements
     team_color, team_logo = _get_team_assets(team)
+    img_src = get_driver_image_path(year, full_name)
 
     return html.Div([
+        # Text block (Left column)
         html.Div([
-            html.Div(f'{year} Season', style={'fontSize': '0.6rem', 'color': '#888', 'letterSpacing': '0.15em',
-                                              'textTransform': 'uppercase', 'fontFamily': 'Titillium Web', 'marginBottom': '4px'}),
-            html.Div(full_name, style={'fontFamily': 'Titillium Web', 'fontSize': '1.8rem', 'fontWeight': '900',
+            html.Div(f'{year} Season', style={'fontSize': '0.65rem', 'color': '#888', 'letterSpacing': '0.15em',
+                                              'textTransform': 'uppercase', 'fontFamily': 'Titillium Web', 'marginBottom': '6px'}),
+            html.Div(full_name, style={'fontFamily': 'Titillium Web', 'fontSize': '2.2rem', 'fontWeight': '900',
                                         'color': team_color, 'lineHeight': '1'}),
-            html.Div(team, style={'fontSize': '0.7rem', 'color': '#888', 'fontFamily': 'Titillium Web', 'marginTop': '4px'}),
-        ], style={'flex': '1'}),
-        html.Div(
-            html.Img(src=f'/assets/logos/{team_logo}.avif', style={'height': '36px', 'objectFit': 'contain'}) if team_logo else html.Div(),
-            style={'display': 'flex', 'alignItems': 'center'},
-        ),
+            html.Div(team, style={'fontSize': '0.8rem', 'color': '#aaa', 'fontFamily': 'Titillium Web', 'marginTop': '6px'}),
+        ], style={'flex': '1', 'zIndex': '2'}),
+
+        # Graphics / Assets Block (Right column)
+        html.Div([
+            # Team Brand Logo
+            html.Img(src=f'/assets/logos/{team_logo}.avif', style={'height': '42px', 'objectFit': 'contain', 'marginRight': '32px'}) if team_logo else html.Div(),
+
+            # ⚡ Expanded Profile Image Frame Container
+            html.Div([
+                html.Img(
+                    src=img_src,
+                    style={
+                        'height': '185px',          # ⚡ Significantly scaled up from 115px
+                        'position': 'absolute',
+                        'bottom': '-35px',          # Drops slightly below the floor for an intentional cutout look
+                        'right': '-5px',           # Tucks neatly near the edge boundary
+                        'objectFit': 'contain',
+                        'maskImage': 'linear-gradient(to bottom, rgba(0,0,0,1) 75%, rgba(0,0,0,0) 100%)',
+                        '-webkitMaskImage': 'linear-gradient(to bottom, rgba(0,0,0,1) 75%, rgba(0,0,0,0) 100%)'
+                    }
+                )
+            ], style={'position': 'relative', 'width': '160px', 'height': '140px'}) # Expanded bounds to account for larger asset scale
+
+        ], style={'display': 'flex', 'alignItems': 'center', 'justifyContent': 'flex-end', 'zIndex': '2'}),
+
     ], style={'display': 'flex', 'justifyContent': 'space-between', 'alignItems': 'center',
-              'background': f'linear-gradient(135deg, rgba(0,0,0,0.8), {team_color}22)', 'border': f'1px solid {team_color}44',
-              'borderLeft': f'3px solid {team_color}', 'borderRadius': '6px', 'padding': '14px 16px', 'marginBottom': '16px'})
+              'background': f'linear-gradient(135deg, rgba(0,0,0,0.85), {team_color}22)', 'border': f'1px solid {team_color}44',
+              'borderLeft': f'4px solid {team_color}', 'borderRadius': '6px', 'padding': '16px 24px', 'marginBottom': '16px',
+              'position': 'relative', 'overflow': 'hidden', 'height': '150px'}) # ⚡ Bounded container height scaled up from 68px
+
+
 
 
 def make_stat_card(label: str, value: any, team: str, sub: str = '', accent: bool = False) -> html.Div:
@@ -243,3 +267,21 @@ def make_points_evolution(drv_results: pd.DataFrame, team: str) -> go.Figure:
         ),
         **TRANSPARENT
     )
+
+
+import os
+
+def get_driver_image_path(year: int, driver_name: str) -> str:
+    if not driver_name or driver_name.lower() == 'select':
+        return "/assets/drivers/fallback.avif"
+
+    name_slug = driver_name.strip().split()[-1].lower()
+    filename = f"{year}-{name_slug}.avif"
+
+    # Check if the asset file exists relative to your project root structure
+    local_path = os.path.join("assets", "drivers", filename)
+
+    if os.path.exists(local_path):
+        return f"/assets/drivers/{filename}"
+
+    return "/assets/drivers/fallback.avif" # Returns your fallback gracefully if image is missing
