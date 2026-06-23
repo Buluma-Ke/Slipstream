@@ -159,25 +159,87 @@ def make_distribution_chart(drv_results: pd.DataFrame, team: str) -> go.Figure:
                              yaxis=dict(autorange="reversed", color='#888'), xaxis=dict(visible=False), **TRANSPARENT)
 
 
+# def make_points_donut(drv_results: pd.DataFrame, team: str) -> go.Figure:
+#     team_color, _ = _get_team_assets(team)
+#     in_pts = len(drv_results[drv_results['Points'] > 0])
+#     total = len(drv_results)
+#     pts_pct = round((in_pts / total) * 100, 1) if total > 0 else 0
+
+#     fig = go.Figure(data=[go.Pie(labels=['Points', 'No Points'], values=[in_pts, total - in_pts], hole=.7, marker=dict(colors=[team_color, '#222']), textinfo='none')])
+
+#     return fig.update_layout(showlegend=False, margin=dict(l=10, r=10, t=30, b=10), height=250, annotations=[dict(text=f'{pts_pct}%',
+#                                                                                                                 x=0.5, y=0.5,
+#                                                                                                                 font_size=20,
+#                                                                                                                 font_family="Titillium Web",
+#                                                                                                                 font_color="white"])
+
 def make_points_donut(drv_results: pd.DataFrame, team: str) -> go.Figure:
     team_color, _ = _get_team_assets(team)
     in_pts = len(drv_results[drv_results['Points'] > 0])
     total = len(drv_results)
     pts_pct = round((in_pts / total) * 100, 1) if total > 0 else 0
 
-    fig = go.Figure(data=[go.Pie(labels=['Points', 'No Points'], values=[in_pts, total - in_pts], hole=.7, marker=dict(colors=[team_color, '#222']), textinfo='none')])
+    fig = go.Figure(data=[go.Pie(
+        labels=['Points', 'No Points'],
+        values=[in_pts, total - in_pts],
+        hole=.7,
+        marker=dict(colors=[team_color, '#222']),
+        textinfo='none'
+    )])
 
-    return fig.update_layout(showlegend=False, margin=dict(l=10, r=10, t=30, b=10), height=250, annotations=[dict(text=f'{pts_pct}%',
-                                                                                                                x=0.5, y=0.5,
-                                                                                                                font_size=20,
-                                                                                                                font_family="Titillium Web",
-                                                                                                                font_color="white",
-                                                                                                                showarrow=False)], **TRANSPARENT)
+    return fig.update_layout(
+        showlegend=False,
+        margin=dict(l=10, r=10, t=30, b=10),
+        height=250,
+        annotations=[dict(
+            text=f'{pts_pct}%',
+            x=0.5,
+            y=0.5,
+            showarrow=False,  # ⚡ Prevents default arrow rendering inside the hole
+            font=dict(        # ⚡ Standardized font property hierarchy block
+                size=24,      # Slightly bumped to stand out inside the donut
+                family="Titillium Web",
+                color="white"
+            )
+        )],
+        **TRANSPARENT
+    )
 
 
 def make_points_evolution(drv_results: pd.DataFrame, team: str) -> go.Figure:
     team_color, _ = _get_team_assets(team)
     fig = go.Figure()
-    fig.add_trace(go.Scatter(x=drv_results['RoundNumber'], y=drv_results['Points'].cumsum(), mode='lines+markers', line=dict(color=team_color)))
 
-    return fig.update_layout(margin=dict(l=40, r=10, t=30, b=30), height=300, **TRANSPARENT)
+    # Add the primary line + marker trace
+    fig.add_trace(go.Scatter(
+        x=drv_results['RoundNumber'],
+        y=drv_results['Points'].cumsum(),
+        mode='lines+markers',
+        line=dict(color=team_color, width=2.5),
+        marker=dict(size=6),
+        hoverinfo='x+y'
+    ))
+
+    return fig.update_layout(
+        margin=dict(l=40, r=15, t=30, b=30),
+        height=300,
+        # Clean up x-axis (No vertical gridlines, proper fonts nested in tickfont)
+        xaxis=dict(
+            showgrid=False,
+            zeroline=False,
+            color='#666',
+            tickfont=dict(family="Titillium Web"),
+            tickmode='linear',
+            dtick=5
+        ),
+        # Minimalist y-axis (Faint, ultra-thin horizontal rules)
+        yaxis=dict(
+            showgrid=True,
+            gridwidth=0.5,
+            gridcolor='#222630',
+            zeroline=False,
+            color='#666',
+            tickfont=dict(family="Titillium Web")   # ⚡ Fixed nested property path
+        ),
+        **TRANSPARENT
+    )
