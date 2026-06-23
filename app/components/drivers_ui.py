@@ -39,7 +39,7 @@ def _get_team_assets(raw_team_string: str):
 def render_driver_hero(year: int, full_name: str, team: str) -> html.Div:
     team_color, team_logo = _get_team_assets(team)
     img_src = get_driver_image_path(year, full_name)
-
+    clean_logo_name = str(team_logo).lower().replace(" ", "")
     return html.Div([
         # Text block (Left column)
         html.Div([
@@ -51,9 +51,19 @@ def render_driver_hero(year: int, full_name: str, team: str) -> html.Div:
         ], style={'flex': '1', 'zIndex': '2'}),
 
         # Graphics / Assets Block (Right column)
+
         html.Div([
             # Team Brand Logo
-            html.Img(src=f'/assets/logos/{team_logo}.avif', style={'height': '42px', 'objectFit': 'contain', 'marginRight': '32px'}) if team_logo else html.Div(),
+            html.Img(src=f'/assets/logos/{clean_logo_name}.avif',
+                     style={
+                         'height': '130px',
+                         'position': 'absolute',
+                         'top': '10px',
+                         'right': '100px',
+                         'opacity': '0.12',
+                         'objectFit': 'contain',
+                         'zIndex': '1'
+                         }) if team_logo else html.Div(),
 
             # ⚡ Expanded Profile Image Frame Container
             html.Div([
@@ -69,7 +79,7 @@ def render_driver_hero(year: int, full_name: str, team: str) -> html.Div:
                         '-webkitMaskImage': 'linear-gradient(to bottom, rgba(0,0,0,1) 75%, rgba(0,0,0,0) 100%)'
                     }
                 )
-            ], style={'position': 'relative', 'width': '160px', 'height': '140px'}) # Expanded bounds to account for larger asset scale
+            ], style={'position': 'relative', 'width': '260px', 'height': '150px'}) # Expanded bounds to account for larger asset scale
 
         ], style={'display': 'flex', 'alignItems': 'center', 'justifyContent': 'flex-end', 'zIndex': '2'}),
 
