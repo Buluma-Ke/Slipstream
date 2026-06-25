@@ -28,6 +28,22 @@ TEAM_NAME_MAP = {
     'Racing Bulls': 'RB'
 }
 
+# Accurate lookup matrix for precise chassis model naming from file index
+CHASSIS_MAP = {
+    'Alpine': {2024: 'alpine-a524', 2025: 'alpine-a525', 2026: 'alpine-a526'},
+    'Aston Martin': {2024: 'aston-martin-amr24', 2025: 'aston-martin-amr25', 2026: 'aston-martin-amr26'},
+    'Ferrari': {2024: 'ferrari-sf24', 2025: 'ferrari-sf25', 2026: 'ferrari-sf26'},
+    'Haas': {2024: 'haas-vf24', 2025: 'haas-vf25', 2026: 'haas-vf26'},
+    'McLaren': {2024: 'mclaren-mcl38', 2025: 'mclaren-mcl39', 2026: 'mclaren-mcl40'},
+    'Mercedes': {2024: 'mercedes-w15', 2025: 'mercedes-w16', 2026: 'mercedes-w17'},
+    'Red Bull': {2024: 'redbullracing-rb20', 2025: 'redbull-racing-rb21', 2026: 'redbull-racing-rb22'},
+    'RB': {2024: 'rb-vcarb01', 2025: 'rb-vcarb02', 2026: 'racing-bulls-vcarb03'},
+    'Sauber': {2024: 'kick-sauber-c44', 2025: 'kick-sauber-c44', 2026: 'kick-sauber-c45'},
+    'Audi': {2026: 'audi-r26'},
+    'Cadillac': {2026: 'cadillac-mac-26'}
+}
+
+
 def _get_team_assets(raw_team_string: str):
     """Helper method to look up and apply centralized colors and logos safely."""
     norm_name = TEAM_NAME_MAP.get(raw_team_string, raw_team_string)
@@ -36,9 +52,29 @@ def _get_team_assets(raw_team_string: str):
     return color, logo
 
 
+def get_car_image_path(year: int, raw_team_string: str) -> str:
+    """Finds and resolves the existing asset file path for car models across multiple formats."""
+    norm_name = TEAM_NAME_MAP.get(raw_team_string, raw_team_string)
+    year_map = CHASSIS_MAP.get(norm_name, {})
+    chassis_base = year_map.get(int(year), norm_name.lower().replace(" ", ""))
+
+    base_filename = f"{chassis_base}-{year}-f1-car-formula-1-dashboard"
+    extensions = ['.png.avif', '.webp', '.png']
+
+    for ext in extensions:
+        filename = f"{base_filename}{ext}"
+        local_path = os.path.join("assets", "cars", filename)
+        if os.path.exists(local_path):
+            return f"/assets/cars/{filename}"
+
+    return "/assets/drivers/fallback.avif"
+
+
 def render_team_hero(year: int, team: str) -> html.Div:
     team_color, team_logo = _get_team_assets(team)
     clean_logo_name = str(team_logo).lower().replace(" ", "")
+    car_img_src = get_car_image_path(year, team)
+
     return html.Div([
         # Text block (Left column)
         html.Div([
@@ -50,17 +86,33 @@ def render_team_hero(year: int, team: str) -> html.Div:
 
         # Graphics / Assets Block (Right column)
         html.Div([
-            # Team Brand Logo
+            # Team Brand Logo Background
             html.Img(src=f'/assets/logos/{clean_logo_name}.avif',
                      style={
                          'height': '130px',
                          'position': 'absolute',
                          'top': '10px',
-                         'right': '20px',
-                         'opacity': '0.15',
+                         'right': '220px',
+                         'opacity': '0.12',
                          'objectFit': 'contain',
                          'zIndex': '1'
                      }) if team_logo else html.Div(),
+
+            # Car Profile Image Cutout Frame
+            html.Div([
+                html.Img(
+                    src=car_img_src,
+                    style={
+                        'height': '155px',
+                        'position': 'absolute',
+                        'bottom': '-25px',
+                        'right': '-15px',
+                        'objectFit': 'contain',
+                        'maskImage': 'linear-gradient(to bottom, rgba(0,0,0,1) 80%, rgba(0,0,0,0) 100%)',
+                        '-webkitMaskImage': 'linear-gradient(to bottom, rgba(0,0,0,1) 80%, rgba(0,0,0,0) 100%)'
+                    }
+                )
+            ], style={'position': 'relative', 'width': '380px', 'height': '150px'})
 
         ], style={'display': 'flex', 'alignItems': 'center', 'justifyContent': 'flex-end', 'zIndex': '2'}),
 
@@ -98,10 +150,9 @@ def make_radial_bar_chart(tm_results: pd.DataFrame, wins: int, podiums: int, dnf
 
     for metric in perf_metrics:
         r_radius = metric['ring_level']
-        pct = (metric['val'] / (total_races * 2)) if 'Positions' in tm_results and total_races > 0 else (metric['val'] / total_races if total_races > 0 else 0)
 
         if metric['label'] in ['In Points', 'Wins', 'Podiums'] and 'Positions' in tm_results:
-            pct = (metric['val'] / (total_races * 2))
+            pct = (metric['val'] / (total_races * 2)) if total_races > 0 else 0
         else:
             pct = (metric['val'] / total_races) if total_races > 0 else 0
 

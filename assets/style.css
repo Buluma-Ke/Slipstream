@@ -1120,3 +1120,78 @@ body::before {
         width: 100%;
     }
 }
+
+
+
+/*
+    Teams Page Visualization Grid Layout (Desktop)
+    ================================================ */
+
+.team-hero-card-wrapper {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: #14161f;
+    border-radius: 8px;
+    padding: 20px;
+    overflow: hidden;
+    position: relative;
+    height: 180px;
+    box-sizing: border-box;
+}
+
+.hero-car-image-block {
+    height: 100%;
+    display: flex;
+    align-items: flex-end;
+}
+
+.hero-team-car-img {
+    height: 155px; /* Safely bounds the car profile geometry inside the card */
+    width: auto;
+    object-fit: contain;
+    mask-image: linear-gradient(to bottom, rgba(0,0,0,1) 80%, rgba(0,0,0,0) 100%);
+    -webkit-mask-image: linear-gradient(to bottom, rgba(0,0,0,1) 80%, rgba(0,0,0,0) 100%);
+}
+
+#teams-graphs-grid {
+    display: flex !important;
+    flex-direction: row;
+    width: 100%;
+    gap: 16px;
+    margin-top: 16px;
+    box-sizing: border-box;
+}
+
+#teams-graphs-grid > div:first-child {
+    flex: 0 0 35% !important;
+    min-width: 320px;
+}
+
+#teams-graphs-grid > div:last-child {
+    flex: 1 1 65% !important;
+}
+
+#teams-graphs-grid .info-card {
+    width: 100%;
+    box-sizing: border-box;
+}
+
+
+
+/*
+    Responsive Breakpoint (Tablet / Small Screens)
+    ============================================== */
+
+@media screen and (max-width: 1024px) {
+    #teams-graphs-grid {
+        flex-direction: column !important; /* Stacks left column elements naturally on top of the right column */
+        gap: 16px;
+    }
+
+    #teams-graphs-grid > div:first-child,
+    #teams-graphs-grid > div:last-child {
+        flex: 1 1 100% !important;
+        width: 100%;
+    }
+}
