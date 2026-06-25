@@ -4,6 +4,9 @@ from dash_iconify import DashIconify
 
 def layout():
     return html.Div([
+        # ⚡ Global memory stores for page state tracking
+        dcc.Store(id='teams-store-year', data=2025),
+        dcc.Store(id='teams-store-team', data=None),
 
         # Header row
         html.Div([
